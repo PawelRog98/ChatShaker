@@ -1,0 +1,87 @@
+using ChatShaker.Api.Configuration;
+using ChatShaker.Api.Middlewares;
+using ChatShaker.Application;
+using ChatShaker.Application.Common.Behaviors;
+using ChatShaker.Application.Mapping;
+using ChatShaker.Infrastructure;
+using ChatShaker.Infrastructure.Data;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore;
+
+namespace ChatShaker.Api
+{
+    public class Program
+    {
+        public static async Task Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            var quizAppSpecificOrigins = "_quizAppSpecificOrigins";
+
+            builder.Configuration.AddMainConfiguration();
+
+            builder.Services
+                .AddApplication()
+                .AddInfrastructure(builder.Configuration, builder.Environment);
+
+            builder.Services.AddValidatorsFromAssemblyContaining<MappingProfile>();
+            #region CORS
+            builder.Services.AddCors(options =>
+            {
+                var urls = builder.Configuration.GetSection("CORS:CorsUrls").Get<List<string>>();
+                options.AddPolicy(name: quizAppSpecificOrigins, policy =>
+                {
+                    policy.WithOrigins(urls.ToArray());
+                });
+            });
+            #endregion
+
+            builder.Services.AddControllers();
+            builder.Services.AddOpenApi();
+
+            builder.Services.AddScoped<DataSeeder>();
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
+            builder.Services.AddScoped<RequestExceptionMiddleware>();
+
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
+
+            var app = builder.Build();
+
+            app.UseMiddleware<RequestExceptionMiddleware>();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Chat-Shaker API v1");
+                });
+            }
+
+            //app.UseHttpsRedirection();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+                await seeder.Seed();
+            }
+
+            app.UseAuthorization();
+
+
+            app.MapControllers();
+
+            app.Run();
+        }
+
+
+    }
+}

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatShaker.ChatMauiApp.Views.RegisterPage"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+            x:DataType="viewModels:RegisterPageViewModel"
+            xmlns:prism="http://prismlibrary.com"
+            prism:ViewModelLocator.AutowireViewModel="Automatic"
+             Title="RegisterPage">
+    <Grid>
+        <VerticalStackLayout>
+            <Label 
+            Text="Welcome to .NET MAUI!"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+            <Label Text="{Binding EmailError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding EmailError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="Email" Text="{Binding Email}"/>
+
+            <Label Text="{Binding PublicNickError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding PublicNickError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="Nick" Text="{Binding PublicNick}"/>
+
+            <Label Text="{Binding FirstNameError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding FirstNameError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="First name" Text="{Binding FirstName}" />
+
+            <Label Text="{Binding LastNameError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding LastNameError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="Last name" Text="{Binding LastName}"/>
+
+            <Label Text="{Binding PasswordError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding PasswordError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+
+            <Label Text="{Binding ConfirmPasswordError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding ConfirmPasswordError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Entry Placeholder="Confirm password" Text="{Binding ConfirmPassword}" IsPassword="True"/>
+
+            <Label Text="{Binding DateOfBirthError}" TextColor="Red">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding DateOfBirthError}" Value="">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <DatePicker Date="{Binding DateOfBirth}"
+                    Format="dd.MM.yyyy"
+                    MinimumDate="1900-01-01"/>
+
+            <Button Text="Register" Command="{Binding RegisterCommand}"/>
+        </VerticalStackLayout>
+
+        <Grid BackgroundColor="#50d1d1d1" 
+              IsVisible="{Binding IsBusy}"
+              InputTransparent="False">
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               Color="Black"
+                               WidthRequest="60"
+                               HeightRequest="60"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

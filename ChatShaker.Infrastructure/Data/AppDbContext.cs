@@ -1,0 +1,31 @@
+﻿using ChatShaker.Domain.Entities;
+using ChatShaker.Domain.Entities.Configurations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChatShaker.Infrastructure.Data
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions) { }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Token> Tokens { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            var configurator = new EntitiesBuilderConfiguration();
+            configurator.Configure(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(TokenConfiguration).Assembly);
+        }
+    }
+}
