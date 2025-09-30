@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,17 +23,18 @@ namespace ChatShaker.Infrastructure.Data
 
         public async Task Seed()
         {
-            var ifRolesExixts = await _context.Roles.AsNoTracking().AnyAsync();
-            var ifUsersExists = await _context.Users.AsNoTracking().AnyAsync();
+            await DbHealtCheck();
 
-            if (!ifRolesExixts)
+            if (!await _context.Roles.AnyAsync())
             {
                 await _context.Roles.AddRangeAsync(GetRoles());
                 await _context.SaveChangesAsync();
             }
-            if (!ifUsersExists)
+
+            if (!await _context.Users.AnyAsync())
             {
-                var adminRole = await _context.Roles.FirstOrDefaultAsync(x=>x.RoleName == "Administrator");
+                var adminRole = await _context.Roles
+                    .FirstOrDefaultAsync(x => x.RoleName == "Administrator");
 
                 if (adminRole == null)
                     throw new Exception("Role Admin not found in db");
@@ -59,7 +61,7 @@ namespace ChatShaker.Infrastructure.Data
 
         private IEnumerable<User> GetUsers(long adminRoleId)
         {
-            var users =  new List<User>()
+            var users = new List<User>()
             {
                 new User
                 {
@@ -81,6 +83,42 @@ namespace ChatShaker.Infrastructure.Data
             }
 
             return users;
+        }
+
+        private async Task DbHealtCheck()
+        {
+            int maxRetries = 12;
+            int delaySeconds = 15;
+            bool isConnected = false;
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    await _context.Database.OpenConnectionAsync();
+                    await _context.Database.CloseConnectionAsync();
+
+                    isConnected = true;
+                    Console.WriteLine($"Connected to DB in: {stopwatch.Elapsed}");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"SQL Failed in {i + 1} attempt");
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+                }
+
+
+            }
+            stopwatch.Stop();
+
+            if (!isConnected)
+            {
+                throw new Exception("Database is not available");
+            }
         }
     }
 }

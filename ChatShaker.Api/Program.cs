@@ -66,7 +66,7 @@ namespace ChatShaker.Api
                 });
             }
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             using (var scope = app.Services.CreateScope())
             {

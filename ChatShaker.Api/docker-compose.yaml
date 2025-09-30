@@ -1,0 +1,43 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: ChatShaker.Api/Dockerfile
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__LOGLEVEL__DEFAULT: Debug
+    depends_on:
+      - mssql
+      - redis
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    env_file:
+      - .env
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    restart: always
+
+  redis:
+    image: docker.io/library/redis:latest
+    env_file:
+      - .env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  sql-data:
+  redis-data:
