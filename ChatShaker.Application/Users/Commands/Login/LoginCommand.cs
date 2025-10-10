@@ -49,12 +49,12 @@ namespace ChatShaker.Application.Users.Commands.Login
                 throw new BadAuthenticationException("Invalid user data.");
             }
 
-            var model = _mapper.Map<UserModel>(user);
-
             if (user.IsEmailConfirmed == false)
             {
                 throw new NotActiveUserException();
             }
+
+            var model = _mapper.Map<UserModel>(user);
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, command.Login.Password);
             if (result == PasswordVerificationResult.Failed)
