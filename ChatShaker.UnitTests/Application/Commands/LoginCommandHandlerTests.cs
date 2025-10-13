@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Moq;
 using Xunit;
 
-namespace ChatShaker.UnitTests.Users.Commands;
+namespace ChatShaker.UnitTests.Application.Commands;
 
 public class LoginCommandHandlerTests
 {

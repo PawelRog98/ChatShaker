@@ -23,46 +23,16 @@ namespace ChatShaker.Infrastructure.Authentication
 {
     public class AuthService : IAuthService
     {
-        private readonly IUserRepository _userRepository;
+        //private readonly IUserRepository _userRepository;
         private readonly ITokenRepository _tokenRepository;
         private readonly JwtSettings _authSettings;
-        private readonly IPasswordHasher<User> _passwordHasher;
+        //private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(IUserRepository userRepository, JwtSettings jwtSettings, IPasswordHasher<User> passwordHasher, ITokenRepository tokenRepository)
+        public AuthService(JwtSettings jwtSettings, ITokenRepository tokenRepository)
         {
-            _userRepository = userRepository;
             _authSettings = jwtSettings;
-            _passwordHasher = passwordHasher;
             _tokenRepository = tokenRepository;
         }
-
-        //public async Task<AuthTokenModel> Login(LoginModel loginModel) 
-        //{
-        //    var user = await _userRepository.GetUserByEmail(loginModel.Email);
-
-        //    if (user == null)
-        //    {
-        //        throw new BadAuthenticationException("Invalid user data.");
-        //    }
-
-        //    //if (user.Suspensions.Any(x=>x.Status == SuspensionStatus.Active) == true)
-        //    //{
-        //    //    throw new SuspendedUserException(user.IsSuspendedUntilDate.Value);
-        //    //}
-        //    if (user.IsEmailConfirmed == false)
-        //    {
-        //        throw new NotActiveUserException();
-        //    }
-
-        //    var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginModel.Password);
-        //    if (result == PasswordVerificationResult.Failed)
-        //    {
-        //        throw new BadAuthenticationException("Invalid user data.");
-        //    }
-
-        //    var token = await GenerateJwtToken(user);
-        //    return token;
-        //}
 
         public async Task<AuthTokenModel> GenerateJwtToken(UserModel user, CancellationToken cancellationToken)
         {
