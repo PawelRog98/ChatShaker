@@ -16,7 +16,7 @@ namespace ChatShaker.Migrator.Migrations
             {
                 Create.Table("Roles")
                     .WithColumn("Id").AsInt64().PrimaryKey().Identity()
-                    .WithColumn("PublicId").AsGuid().NotNullable().WithDefault(SystemMethods.NewGuid)
+                    .WithColumn("PublicId").AsGuid().WithDefault(SystemMethods.NewGuid).NotNullable()
                     .WithColumn("RoleName").AsString(512);
             }
 
@@ -24,7 +24,7 @@ namespace ChatShaker.Migrator.Migrations
             {
                 Create.Table("Users")
                     .WithColumn("Id").AsInt64().PrimaryKey().Identity()
-                    .WithColumn("PublicId").AsGuid().NotNullable().WithDefault(SystemMethods.NewGuid)
+                    .WithColumn("PublicId").AsGuid().WithDefault(SystemMethods.NewGuid).NotNullable()
                     .WithColumn("PublicNick").AsString(512).NotNullable()
                     .WithColumn("FirstName").AsString(512).NotNullable()
                     .WithColumn("LastName").AsString(512).NotNullable()
@@ -38,7 +38,8 @@ namespace ChatShaker.Migrator.Migrations
                     .WithColumn("CreatedAtUtc").AsDateTime2().NotNullable()
                     .WithColumn("ModifiedAtUtc").AsDateTime2().Nullable();
 
-                Create.ForeignKey("FK_Users_RoleId")
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Create.ForeignKey("FK_Users_RoleId")
                     .FromTable("Users").ForeignColumn("RoleId")
                     .ToTable("Roles").PrimaryColumn("Id")
                     .OnDelete(System.Data.Rule.None);
@@ -49,7 +50,8 @@ namespace ChatShaker.Migrator.Migrations
 
             if (Schema.Table("Users").Exists())
             {
-                Delete.ForeignKey("FK_Users_RoleId").OnTable("Users");
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Delete.ForeignKey("FK_Users_RoleId").OnTable("Users");
                 Delete.Table("Users");
             }
 

@@ -34,25 +34,30 @@ namespace ChatShaker.Infrastructure
 
             #region JWT
             var jwtSettings = new JwtSettings();
-            configuration.GetSection("JWTAuth").Bind(jwtSettings);
+            if (!environment.IsEnvironment("IntegrationTests"))
+            {
+                configuration.GetSection("JWTAuth").Bind(jwtSettings);
 
-            services.AddSingleton(jwtSettings);
-            services.AddAuthentication(option =>
-            {
-                option.DefaultAuthenticateScheme = "Bearer";
-                option.DefaultScheme = "Bearer";
-                option.DefaultChallengeScheme = "Bearer";
-            }).AddJwtBearer(conf =>
-            {
-                conf.RequireHttpsMetadata = false;
-                conf.SaveToken = true;
-                conf.TokenValidationParameters = new TokenValidationParameters
+
+                services.AddSingleton(jwtSettings);
+                services.AddAuthentication(option =>
                 {
-                    ValidIssuer = jwtSettings.JwtIssuer,
-                    ValidAudience = jwtSettings.JwtIssuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JwtKey)),
-                };
-            });
+                    option.DefaultAuthenticateScheme = "Bearer";
+                    option.DefaultScheme = "Bearer";
+                    option.DefaultChallengeScheme = "Bearer";
+                }).AddJwtBearer(conf =>
+                {
+                    conf.RequireHttpsMetadata = false;
+                    conf.SaveToken = true;
+                    Console.WriteLine($"[DEBUG-JWT] JWT Issuer: '{jwtSettings.JwtIssuer}'");
+                    conf.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = jwtSettings.JwtIssuer,
+                        ValidAudience = jwtSettings.JwtIssuer,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JwtKey)),
+                    };
+                });
+            }
             #endregion
 
             #region Connections
@@ -73,16 +78,12 @@ namespace ChatShaker.Infrastructure
                         Prefix = "app_hangfire:",
                         InvisibilityTimeout = TimeSpan.FromMinutes(10)
                     }));
-            }
-            else
-            {
-                services.AddDistributedMemoryCache();
-            }
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
-            services.AddDatabaseDeveloperPageExceptionFilter();
+                var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(connectionString));
+                services.AddDatabaseDeveloperPageExceptionFilter();
+            }
             #endregion
 
             return services;

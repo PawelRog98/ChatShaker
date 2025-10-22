@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ChatShaker.Migrator
 {
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
