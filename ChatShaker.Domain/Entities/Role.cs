@@ -9,7 +9,7 @@ namespace ChatShaker.Domain.Entities
     public class Role
     {
         public long Id { get; set; }
-        public Guid PublicId { get; private set; }
+        public Guid PublicId { get; set; }
         public string RoleName { get; set; }
     }
 }

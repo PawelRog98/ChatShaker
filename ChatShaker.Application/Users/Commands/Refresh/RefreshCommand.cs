@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
 using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authentication;
 using ChatShaker.Domain.Exceptions;
 using ChatShaker.Domain.Repositories;
+using ChatShaker.Domain.Serivces;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -45,9 +44,7 @@ namespace ChatShaker.Application.Users.Commands.Refresh
 
             await _tokenRepository.DeleteToken(token, cancellationToken);
 
-            var userModel = _mapper.Map<UserModel>(user);
-
-            var accessTokenResult = await _authService.GenerateJwtToken(userModel, cancellationToken);
+            var accessTokenResult = await _authService.GenerateJwtToken(user, cancellationToken);
 
             var tokenResult = _mapper.Map<AuthTokenDto>(accessTokenResult);
             return tokenResult;

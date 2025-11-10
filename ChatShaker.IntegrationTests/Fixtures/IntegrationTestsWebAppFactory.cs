@@ -25,6 +25,7 @@ public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
     public DbConnection Connection { get; private set; }
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("IntegrationTests");
         builder.ConfigureAppConfiguration((context, config) =>
         {
             config.Sources.Clear();
@@ -91,11 +92,7 @@ public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
             var provider = services.BuildServiceProvider();
             using var scope = provider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            //TestDataSeeder.SeedUser(db).GetAwaiter().GetResult();
         });
-
-        builder.UseEnvironment("IntegrationTests");
     }
 
     protected override void Dispose(bool disposing)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatShaker.Core.Models.Authentication
+namespace ChatShaker.Domain.Models.Authentication
 {
     public class AuthTokenModel
     {

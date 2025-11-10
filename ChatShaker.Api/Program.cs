@@ -1,4 +1,5 @@
 using ChatShaker.Api.Configuration;
+using ChatShaker.Api.Hubs;
 using ChatShaker.Api.Middlewares;
 using ChatShaker.Application;
 using ChatShaker.Application.Common.Behaviors;
@@ -42,6 +43,12 @@ namespace ChatShaker.Api
 
             builder.Services.AddScoped<DataSeeder>();
 
+            builder.Services.AddSignalR()
+                .AddStackExchangeRedis(builder.Configuration.GetConnectionString("RedisConnection"), options =>
+                {
+                    options.Configuration.ChannelPrefix = "ChatShaker_App";
+                });
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -78,6 +85,7 @@ namespace ChatShaker.Api
 
 
             app.MapControllers();
+            app.MapHub<ChatHub>("/chatHub");
 
             app.Run();
         }

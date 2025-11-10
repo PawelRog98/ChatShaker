@@ -2,9 +2,8 @@
 using ChatShaker.Application.Users.Commands.Login;
 using ChatShaker.Application.Users.Commands.Register;
 using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Models.Authentication;
-using ChatShaker.Core.Models.Authorization;
 using ChatShaker.Domain.Entities;
+using ChatShaker.Domain.Models.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,12 +30,10 @@ namespace ChatShaker.Application.Mapping
         }
         private void LoginMappings()
         {
-            CreateMap<LoginDto, LoginModel>();
             CreateMap<AuthTokenDto, AuthTokenModel>();
         }
         private void RegisterMappings()
         {
-            CreateMap<RegisterDto, RegisterModel>();
         }
     }
 }

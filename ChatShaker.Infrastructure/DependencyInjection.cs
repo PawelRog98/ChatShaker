@@ -1,5 +1,4 @@
-﻿using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Domain.Entities;
+﻿using ChatShaker.Domain.Entities;
 using ChatShaker.Infrastructure.Authentication;
 using ChatShaker.Infrastructure.Configuration;
 using ChatShaker.Infrastructure.Data;
@@ -19,6 +18,9 @@ using StackExchange.Redis;
 using System.Text;
 using ChatShaker.Domain.Repositories;
 using ChatShaker.Infrastructure.Repositories;
+using ChatShaker.Domain.Serivces;
+using ChatShaker.Domain.Services;
+using ChatShaker.Infrastructure.ChatRoomServices;
 
 namespace ChatShaker.Infrastructure
 {
@@ -29,8 +31,16 @@ namespace ChatShaker.Infrastructure
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IEncryptionService, EncryptionService>();
+            
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
+            services.AddScoped<IChatRoomMembershipRepository, ChatRoomMembershipRepository>();
+            services.AddScoped<IChatRoomKeyBlobRepository, ChatRoomKeyBlobRepository>();
+            services.AddScoped<IChatRoomRepository, ChatRoomRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IMessageStatusRepository, MessageStatusRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             #region JWT
             var jwtSettings = new JwtSettings();

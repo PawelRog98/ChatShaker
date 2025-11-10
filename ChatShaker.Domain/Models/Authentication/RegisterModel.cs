@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatShaker.Core.Models.Authorization
+namespace ChatShaker.Domain.Models.Authorization
 {
     public class RegisterModel
     {

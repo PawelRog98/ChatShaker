@@ -1,11 +1,10 @@
 ﻿using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authentication;
-using ChatShaker.Core.Models.Authorization;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Enums;
 using ChatShaker.Domain.Exceptions;
+using ChatShaker.Domain.Models.Authentication;
 using ChatShaker.Domain.Repositories;
+using ChatShaker.Domain.Serivces;
 using ChatShaker.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,14 +32,14 @@ namespace ChatShaker.Infrastructure.Authentication
             _authSettings = jwtSettings;
             _tokenRepository = tokenRepository;
         }
-
-        public async Task<AuthTokenModel> GenerateJwtToken(UserModel user, CancellationToken cancellationToken)
+    
+        public async Task<AuthTokenModel> GenerateJwtToken(User user, CancellationToken cancellationToken)
         {
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.FirstName + user.LastName),
-                new Claim(ClaimTypes.Role, user.RoleName),
+                new Claim(ClaimTypes.Role, user.Role.RoleName),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authSettings.JwtKey));

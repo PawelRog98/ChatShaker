@@ -1,4 +1,3 @@
-using ChatShaker.Core.Models.Authentication;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Repositories;
 using ChatShaker.Infrastructure.Authentication;
@@ -22,21 +21,37 @@ public class AuthServiceTests : IClassFixture<AuthFixture>
     [Fact]
     public async Task GenerateJwtToken_ReturnCorrectValue_WhenCorrect()
     {
-        var userModel = new UserModel
+        var role = new Role
         {
-            Id = 123,
-            FirstName = "dgfdgfdg",
-            LastName = "Ddfgdssfsdfoe",
-            PublicNick = "dsfdfgdfg",
+            Id = 1,
+            PublicId = Guid.NewGuid(),
             RoleName = "User"
         };
-        
+        var user = new User
+        {
+            Id = 1,
+            PublicId = Guid.NewGuid(),
+            PublicNick = "dsfdfgdfg",
+            FirstName = "dgfdgfdg",
+            LastName = "Ddfgdssfsdfoe",
+            DateOfBirth = new DateTime(1990, 5, 15),
+            Email = "test@test.com",
+            PasswordHash = "Hashed",
+            IsEmailConfirmed = true,
+            LastActivityDateTime = new DateTime(2025, 10, 9, 10, 30, 0, DateTimeKind.Utc),
+            AccountInfo = "test",
+            CreatedAtUtc = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            ModifiedAtUtc = null,
+            RoleId = 1,
+            Role = role
+        };
+
 
         _authFixture.TokenRepository
             .Setup(t => t.CreateToken(It.IsAny<Token>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var act = await _authService.GenerateJwtToken(userModel, CancellationToken.None);
+        var act = await _authService.GenerateJwtToken(user, CancellationToken.None);
 
         act.Should().NotBeNull();
 

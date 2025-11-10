@@ -97,4 +97,36 @@ public class AuthControllerTest : IntegrationTestBase
         errors.Should().Contain(p => p.Contains("Register.Password"));
         errors.Should().Contain(p => p.Contains("Register.Email"));
     }
+
+    [Fact]
+    public async Task Refresh_GetToken_WhenTokenIsValid()
+    {
+        var loginDto = new LoginDto
+        {
+            Email = "test@test.com",
+            Password = "testPassword-1"
+        };
+
+        var responseLogin = await HttpClient.PostAsJsonAsync<LoginDto>("api/auth/login", loginDto);
+        responseLogin.EnsureSuccessStatusCode();
+        var token = await responseLogin.Content.ReadFromJsonAsync<Response<AuthTokenDto>>();
+
+        token.Data.Should().NotBeNull();
+        var responseToken = await HttpClient.PostAsJsonAsync<string>("api/auth/refresh", token.Data.RefreshToken);
+        var tokenRefreshed = await responseToken.Content.ReadFromJsonAsync<Response<AuthTokenDto>>();
+
+        tokenRefreshed.Data.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Refresh_GetError_WhenTokenIsInvalid()
+    {
+        var responseToken = await HttpClient.PostAsJsonAsync<string>("api/auth/refresh", "bad_token");
+        var tokenRefreshed = await responseToken.Content.ReadFromJsonAsync<Response<AuthTokenDto>>();
+        var errors = tokenRefreshed?.Errors;
+
+        tokenRefreshed.Data.Should().BeNull();
+        tokenRefreshed.Errors.Should().NotBeNullOrEmpty();
+        errors.Should().Contain(p => p.Contains("Token is expired"));
+    }
 }

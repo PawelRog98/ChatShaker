@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authorization;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Enums;
 using ChatShaker.Domain.Exceptions;

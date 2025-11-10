@@ -43,6 +43,11 @@ namespace ChatShaker.Migrator.Migrations
                     .FromTable("Users").ForeignColumn("RoleId")
                     .ToTable("Roles").PrimaryColumn("Id")
                     .OnDelete(System.Data.Rule.None);
+
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Create.Index("IX_Users_PublicId")
+                    .OnTable("Users").OnColumn("PublicId").Ascending()
+                    .WithOptions().Unique();
             }
         }
         public override void Down()
@@ -50,6 +55,9 @@ namespace ChatShaker.Migrator.Migrations
 
             if (Schema.Table("Users").Exists())
             {
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Delete.Index("IX_Users_PublicId").OnTable("Users");
+
                 IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
                     .Delete.ForeignKey("FK_Users_RoleId").OnTable("Users");
                 Delete.Table("Users");

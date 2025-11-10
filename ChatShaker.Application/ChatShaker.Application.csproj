@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ChatShaker.Core\ChatShaker.Core.csproj" />
     <ProjectReference Include="..\ChatShaker.Domain\ChatShaker.Domain.csproj" />
   </ItemGroup>
 

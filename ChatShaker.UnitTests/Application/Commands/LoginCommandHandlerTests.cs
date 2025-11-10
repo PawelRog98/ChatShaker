@@ -1,11 +1,11 @@
 using AutoMapper;
 using ChatShaker.Application.Users.Commands.Login;
 using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authentication;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Exceptions;
+using ChatShaker.Domain.Models.Authentication;
 using ChatShaker.Domain.Repositories;
+using ChatShaker.Domain.Serivces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
@@ -97,7 +97,7 @@ public class LoginCommandHandlerTests
             .Returns(PasswordVerificationResult.Success);
 
         _authServiceMock
-            .Setup(a => a.GenerateJwtToken(userModel, It.IsAny<CancellationToken>()))
+            .Setup(a => a.GenerateJwtToken(user, It.IsAny<CancellationToken>()))
             .ReturnsAsync(token);
 
         _mapperMock
@@ -109,7 +109,7 @@ public class LoginCommandHandlerTests
         act.Should().NotBeNull();
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
         _passwordHasherMock.Verify(p => p.VerifyHashedPassword(user, user.PasswordHash, loginCommand.Login.Password), Times.Once());
-        _authServiceMock.Verify(a => a.GenerateJwtToken(userModel, It.IsAny<CancellationToken>()), Times.Once());
+        _authServiceMock.Verify(a => a.GenerateJwtToken(user, It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [Fact]

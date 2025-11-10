@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authentication;
-using ChatShaker.Core.Models.Authorization;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Exceptions;
 using ChatShaker.Domain.Repositories;
+using ChatShaker.Domain.Serivces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using System;
@@ -54,14 +52,12 @@ namespace ChatShaker.Application.Users.Commands.Login
                 throw new NotActiveUserException();
             }
 
-            var model = _mapper.Map<UserModel>(user);
-
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, command.Login.Password);
             if (result == PasswordVerificationResult.Failed)
             {
                 throw new BadAuthenticationException("Invalid user data.");
             }
-            var token = await _authService.GenerateJwtToken(model, cancellationToken);
+            var token = await _authService.GenerateJwtToken(user, cancellationToken);
 
             var resultToken = _mapper.Map<AuthTokenDto>(token);
 

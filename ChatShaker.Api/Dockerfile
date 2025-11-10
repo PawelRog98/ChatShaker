@@ -9,7 +9,6 @@ WORKDIR /src
 COPY ["ChatShaker.Api/ChatShaker.Api.csproj", "ChatShaker.Api/"]
 COPY ["ChatShaker.Application/ChatShaker.Application.csproj", "ChatShaker.Application/"]
 COPY ["ChatShaker.Infrastructure/ChatShaker.Infrastructure.csproj", "ChatShaker.Infrastructure/"]
-COPY ["ChatShaker.Core/ChatShaker.Core.csproj", "ChatShaker.Core/"]
 COPY ["ChatShaker.Domain/ChatShaker.Domain.csproj", "ChatShaker.Domain/"]
 
 RUN dotnet restore "ChatShaker.Api/ChatShaker.Api.csproj"
@@ -17,7 +16,6 @@ RUN dotnet restore "ChatShaker.Api/ChatShaker.Api.csproj"
 COPY ["ChatShaker.Api/", "ChatShaker.Api/"]
 COPY ["ChatShaker.Application/", "ChatShaker.Application/"]
 COPY ["ChatShaker.Infrastructure/", "ChatShaker.Infrastructure/"]
-COPY ["ChatShaker.Core/", "ChatShaker.Core/"]
 COPY ["ChatShaker.Domain/", "ChatShaker.Domain/"]
 WORKDIR "/src/ChatShaker.Api"
 RUN dotnet build "ChatShaker.Api.csproj" -c Debug -o /app/build
