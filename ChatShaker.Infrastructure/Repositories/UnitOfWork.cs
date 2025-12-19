@@ -21,6 +21,18 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 
+    public async Task SaveChanges(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(ex.Message);
+        }
+    }
+
     public async Task Commit(CancellationToken cancellationToken)
     {
         try

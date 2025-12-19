@@ -37,6 +37,7 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
     }
     public async Task<Guid> Handle(CreateChatRoomCommand request, CancellationToken cancellationToken)
     {
+        try{
         var members = new List<ChatRoomMembership>();
 
         await _unitOfWork.BeginTransaction(cancellationToken);
@@ -53,10 +54,12 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
 
         await _chatRoomRepository.Add(room, cancellationToken);
 
+        await _unitOfWork.SaveChanges(cancellationToken);
+
         var usersDataDto = request.ChatRoomDto.Users;
         var usersToAdd = await _userRepository.GetUsersByPublicId(usersDataDto.Select(x => x.PublicId).ToList(), cancellationToken);
 
-        foreach(var userData in request.ChatRoomDto.Users)
+        foreach(var userData in usersDataDto)
         {
             var userToAdd = usersToAdd.FirstOrDefault(x => x.PublicId == userData.PublicId);
             var newBlob = new ChatRoomKeyBlob
@@ -82,5 +85,11 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
         await _unitOfWork.Commit(cancellationToken);
 
         return room.PublicId;
+        }
+        catch
+        {
+            await _unitOfWork.Rollback(cancellationToken);
+            throw;
+        }
     }
 }

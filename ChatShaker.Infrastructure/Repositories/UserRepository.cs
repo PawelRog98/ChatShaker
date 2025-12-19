@@ -52,7 +52,8 @@ namespace ChatShaker.Infrastructure.Repositories
         public async Task SaveNewUser(User user, CancellationToken cancellationToken)
         {
             await _context.AddAsync(user, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            var result = await _context.SaveChangesAsync(cancellationToken);
+            Console.WriteLine("SaveChanges result: " + result);
         }
     }
 }

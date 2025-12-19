@@ -70,6 +70,10 @@ public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
             if (descriptor != null)
                 services.Remove(descriptor);
 
+            var appDbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(AppDbContext));
+            if (appDbContextDescriptor != null)
+                services.Remove(appDbContextDescriptor);
+
             var redisDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConnectionMultiplexer));
 
             if (redisDescriptor != null)
@@ -84,14 +88,19 @@ public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
 
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer((SqlConnection)Connection);
+                options.UseSqlServer(Connection);
+
+                // Enable SQL logging
+                // options.EnableSensitiveDataLogging();
+                // options.LogTo(Console.WriteLine);
             });
 
             services.AddDistributedMemoryCache();
+            services.AddSignalR();
 
-            var provider = services.BuildServiceProvider();
-            using var scope = provider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            // var provider = services.BuildServiceProvider();
+            // using var scope = provider.CreateScope();
+            // var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         });
     }
 

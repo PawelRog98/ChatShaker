@@ -8,6 +8,7 @@ using FluentAssertions;
 
 namespace ChatShaker.IntegrationTests.Application;
 
+[Collection("IntegrationTests")]
 public class AuthControllerTest : IntegrationTestBase
 {
     public AuthControllerTest(IntegrationTestsWebAppFactory factory) : base(factory) { }
@@ -55,7 +56,7 @@ public class AuthControllerTest : IntegrationTestBase
     {
         var registerDto = new RegisterDto
         {
-            Email = "test2@test.com",
+            Email = "test4@test.com",
             PublicNick = "Test1",
             FirstName = "Name1",
             LastName = "LastName1",

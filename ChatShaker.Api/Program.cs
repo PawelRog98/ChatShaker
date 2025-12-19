@@ -1,8 +1,10 @@
 using ChatShaker.Api.Configuration;
 using ChatShaker.Api.Hubs;
 using ChatShaker.Api.Middlewares;
+using ChatShaker.Api.SignalR;
 using ChatShaker.Application;
 using ChatShaker.Application.Common.Behaviors;
+using ChatShaker.Application.Interfaces;
 using ChatShaker.Application.Mapping;
 using ChatShaker.Infrastructure;
 using ChatShaker.Infrastructure.Data;
@@ -43,16 +45,24 @@ namespace ChatShaker.Api
 
             builder.Services.AddScoped<DataSeeder>();
 
-            builder.Services.AddSignalR()
-                .AddStackExchangeRedis(builder.Configuration.GetConnectionString("RedisConnection"), options =>
-                {
-                    options.Configuration.ChannelPrefix = "ChatShaker_App";
-                });
+            if (!builder.Environment.IsEnvironment("IntegrationTests"))
+            {
+                builder.Services.AddSignalR()
+                    .AddStackExchangeRedis(builder.Configuration.GetConnectionString("RedisConnection"), options =>
+                    {
+                        options.Configuration.ChannelPrefix = "ChatShaker_App";
+                    });
+            }
+            else
+            {
+                builder.Services.AddSignalR();
+            }
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddScoped<RequestExceptionMiddleware>();
+            builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -75,12 +85,14 @@ namespace ChatShaker.Api
 
             app.UseHttpsRedirection();
 
-            using (var scope = app.Services.CreateScope())
+            if (!app.Environment.IsEnvironment("IntegrationTests"))
             {
-                var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-                await seeder.Seed();
+                using (var scope = app.Services.CreateScope())
+                {
+                    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+                    await seeder.Seed();
+                }
             }
-
             app.UseAuthorization();
 
 

@@ -43,45 +43,54 @@ public class AddMemeberToRoomCommandHandler : IRequestHandler<AddMemberToRoomCom
 
     public async Task<Unit> Handle(AddMemberToRoomCommand request, CancellationToken cancellationToken)
     {
-        await _unitOfWork.BeginTransaction(cancellationToken);
-
-        var room = await _chatRoomRepository.GetByPublicId(request.AddMemberToRoomDto.RoomPublicId, cancellationToken);
-
-        if (room == null)
-            throw new BadRequestException("Room doesn't exists");
-
-        var host = await _userRepository.GetUserById(request.HostId, cancellationToken);
-
-        if (host == null)
-            throw new BadAuthenticationException("Host not found");
-
-        var userToAdd = await _userRepository.GetUserByPublicId(request.AddMemberToRoomDto.UserToAddPublicId, cancellationToken);
-
-        if (userToAdd == null)
-            throw new BadRequestException("User doesn't exists");
-
-        var chatBlob = new ChatRoomKeyBlob
+        try
         {
-            ChatRoomId = room.Id,
-            UserId = userToAdd.Id,
-            EncryptedRoomKey = request.AddMemberToRoomDto.EncryptedKey
-        };
+            Console.WriteLine("Handler - AddMember: "+ request.AddMemberToRoomDto.RoomPublicId);
+            await _unitOfWork.BeginTransaction(cancellationToken);
 
-        await _chatRoomKeyBlobRepository.Add(chatBlob, cancellationToken);
+            var room = await _chatRoomRepository.GetByPublicId(request.AddMemberToRoomDto.RoomPublicId, cancellationToken);
 
-        var chatMembership = new ChatRoomMembership
+            if (room == null)
+                throw new BadRequestException("Room doesn't exists");
+
+            var host = await _userRepository.GetUserById(request.HostId, cancellationToken);
+
+            if (host == null)
+                throw new BadAuthenticationException("Host not found");
+
+            var userToAdd = await _userRepository.GetUserByPublicId(request.AddMemberToRoomDto.UserToAddPublicId, cancellationToken);
+
+            if (userToAdd == null)
+                throw new BadRequestException("User doesn't exists");
+
+            var chatBlob = new ChatRoomKeyBlob
+            {
+                ChatRoomId = room.Id,
+                UserId = userToAdd.Id,
+                EncryptedRoomKey = request.AddMemberToRoomDto.EncryptedKey
+            };
+
+            await _chatRoomKeyBlobRepository.Add(chatBlob, cancellationToken);
+
+            var chatMembership = new ChatRoomMembership
+            {
+                ChatRoomId = room.Id,
+                UserId = userToAdd.Id,
+                AddedById = host.Id
+            };
+
+            await _chatRoomMembershipRepository.Add(chatMembership, cancellationToken);
+
+            await _unitOfWork.Commit(cancellationToken);
+
+            await _chatNotifier.UserAdded(room.PublicId, userToAdd.PublicId, cancellationToken);
+
+            return Unit.Value;
+        }
+        catch
         {
-            ChatRoomId = room.Id,
-            UserId = userToAdd.Id,
-            AddedById = host.Id
-        };
-
-        await _chatRoomMembershipRepository.Add(chatMembership, cancellationToken);
-
-        await _unitOfWork.Commit(cancellationToken);
-
-        await _chatNotifier.UserAdded(room.PublicId, userToAdd.PublicId, cancellationToken);
-        
-        return Unit.Value;
+            await _unitOfWork.Rollback(cancellationToken);
+            throw;
+        }
     }
 }
