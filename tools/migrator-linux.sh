@@ -12,9 +12,11 @@ echo "3) Rollback all migrations"
 
 read -p "Choose option (1-3): " choice
 
+cd "$migratorLoc" || exit 1
+
 case "$choice" in
     1)
-        command="migrate"
+        dotnet run -- "$dbconn" "migrate"
         ;;
     2)
         read -p "Set quantity of migrations to rollback: " rollback_quantity
@@ -22,16 +24,13 @@ case "$choice" in
             echo "Error"
             exit 1
         fi
-        command="rollback $rollback_quantity"
+        dotnet run -- "$dbconn" "rollback" "$rollback_quantity"
         ;;
     3)
-        command="rollbackall"
+        dotnet run -- "$dbconn" "rollbackall"
         ;;
 esac
 
-cd "$migratorLoc"
-
-dotnet run -- "$dbconn" "$command"
 
 read -p "Press Enter to exit..."
 exit 1

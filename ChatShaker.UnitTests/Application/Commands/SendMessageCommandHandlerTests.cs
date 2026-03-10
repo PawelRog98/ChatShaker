@@ -85,7 +85,7 @@ public class SendMessageCommandHandlerTests
         {
             MessageId = message.Id,
             Status = Domain.Enums.MessageStatusEnum.Sent,
-            UpdatedAtUtc = DateTime.UtcNow
+            UpdateAtUtc = DateTime.UtcNow
         };
 
         _mockMessageRepository

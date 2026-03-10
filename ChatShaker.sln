@@ -18,6 +18,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{E81F91E4-BAA8-4B73-A4F9-5063944ED1E0}"
 	ProjectSection(SolutionItems) = preProject
 		tools\migrator.bat = tools\migrator.bat
+		tools\migrator-linux.sh = tools\migrator-linux.sh
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatShaker.Domain", "ChatShaker.Domain\ChatShaker.Domain.csproj", "{39503AD1-A41F-4DD9-92CF-0AB72F3CC314}"

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChatShaker.Api.Clients;
+using ChatShaker.Application.Chats.Commands.JoinRoom;
 using ChatShaker.Application.MessagesManagment.Commands.SendMessage;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -24,5 +25,17 @@ public class ChatHub : Hub<IChatClient>
         var cancellationToken = Context.ConnectionAborted;
         
         await _mediator.Send(new SendMessageCommand(sendMessageDto, long.Parse(userId)), cancellationToken);
+    }
+
+    public async Task JoinRoom(Guid roomPublicId)
+    {
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new HubException("Unauthorized");
+        
+        var cancellationToken = Context.ConnectionAborted;
+
+        await _mediator.Send(new JoinRoomCommand(roomPublicId, long.Parse(userId)), cancellationToken);
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomPublicId.ToString());
     }
 }

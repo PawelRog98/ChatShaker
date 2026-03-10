@@ -17,7 +17,6 @@
 
     <ProjectReference Include="../ChatShaker.Api/ChatShaker.Api.csproj" />
     <ProjectReference Include="../ChatShaker.Infrastructure/ChatShaker.Infrastructure.csproj" />
-    <ProjectReference Include="../ChatShaker.Core/ChatShaker.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

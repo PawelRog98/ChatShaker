@@ -31,6 +31,12 @@ namespace ChatShaker.Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
+        public async Task<User?> GetUserByCode(string invitationCode, CancellationToken cancellationToken)
+        {
+            return await _context.Users.Include(x => x.Role)
+                .FirstOrDefaultAsync(x => x.UserInvitationCode == invitationCode, cancellationToken);
+        }
+
         public async Task<User?> GetUserByPublicId(Guid publicId, CancellationToken cancellationToken)
         {
             return await _context.Users.Include(x => x.Role)

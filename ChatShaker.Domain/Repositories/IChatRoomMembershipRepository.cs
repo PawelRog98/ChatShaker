@@ -7,4 +7,5 @@ public interface IChatRoomMembershipRepository
     Task<IEnumerable<ChatRoomMembership>> GetByRoomId(long roomId, CancellationToken cancellationToken);
     Task Add(ChatRoomMembership member, CancellationToken cancellationToken);
     Task Remove(ChatRoomMembership chatRoomMembership, CancellationToken cancellationToken);
+    Task<bool> Exists(long roomId, long userId, CancellationToken cancellationToken);
 }

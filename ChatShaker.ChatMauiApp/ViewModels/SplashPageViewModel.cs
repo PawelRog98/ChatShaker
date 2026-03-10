@@ -25,9 +25,9 @@ namespace ChatShaker.ChatMauiApp.ViewModels
             {
                 var token = await _authService.GetAccessToken();
 
-                Application.Current.MainPage = new AppShell();
+                //Application.Current.MainPage = new AppShell();
                 if (token != null)
-                    await _navigationService.NavigateAsync("MainPage");
+                    await _navigationService.NavigateAsync("ChatListPage");
                 else
                     await _navigationService.NavigateAsync("LoginPage");
             }

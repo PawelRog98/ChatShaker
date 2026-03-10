@@ -7,12 +7,14 @@ namespace ChatShaker.Application.Chats.CreateChatRoom.Commands;
 
 public class CreateChatRoomCommand : IRequest<Guid>
 {
-    public CreateChatRoomCommand(CreateChatRoomDto chatRoomDto)
+    public CreateChatRoomCommand(CreateChatRoomDto chatRoomDto, long userId)
     {
         ChatRoomDto = chatRoomDto;
+        UserId = userId;
     }
 
     public CreateChatRoomDto ChatRoomDto { get; set; }
+    public long UserId { get; set; }
 }
 
 public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomCommand, Guid>
@@ -37,54 +39,55 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
     }
     public async Task<Guid> Handle(CreateChatRoomCommand request, CancellationToken cancellationToken)
     {
-        try{
-        var members = new List<ChatRoomMembership>();
-
-        await _unitOfWork.BeginTransaction(cancellationToken);
-
-        var hostDataDto = request.ChatRoomDto.Users.FirstOrDefault(x => x.isHost == true);
-        var host = await _userRepository.GetUserByPublicId(hostDataDto.PublicId, cancellationToken);
-
-        var room = new ChatRoom
+        try
         {
-            Name = request.ChatRoomDto.Name,
-            HostId = host.Id,
-            CreatedAtUtc = DateTime.UtcNow
-        };
+            var members = new List<ChatRoomMembership>();
 
-        await _chatRoomRepository.Add(room, cancellationToken);
+            await _unitOfWork.BeginTransaction(cancellationToken);
 
-        await _unitOfWork.SaveChanges(cancellationToken);
+            var host = await _userRepository.GetUserById(request.UserId, cancellationToken);
 
-        var usersDataDto = request.ChatRoomDto.Users;
-        var usersToAdd = await _userRepository.GetUsersByPublicId(usersDataDto.Select(x => x.PublicId).ToList(), cancellationToken);
-
-        foreach(var userData in usersDataDto)
-        {
-            var userToAdd = usersToAdd.FirstOrDefault(x => x.PublicId == userData.PublicId);
-            var newBlob = new ChatRoomKeyBlob
+            var room = new ChatRoom
             {
-                UserId = userToAdd.Id,
-                ChatRoomId = room.Id,
-                EncryptedRoomKey = userData.EncryptedUserKey,
-                CreatedAtUtc = DateTime.UtcNow
+                Name = request.ChatRoomDto.Name,
+                HostId = host.Id,
+                CreatedAtUtc = DateTime.UtcNow,
+                IsInitialized = true
             };
 
-            var newMembership = new ChatRoomMembership
+            await _chatRoomRepository.Add(room, cancellationToken);
+
+            await _unitOfWork.SaveChanges(cancellationToken);
+
+            var usersDataDto = request.ChatRoomDto.Keys;
+            var usersToAdd = await _userRepository.GetUsersByPublicId(usersDataDto.Select(x => x.UserId).ToList(), cancellationToken);
+
+            foreach(var userData in usersDataDto)
             {
-                UserId = userToAdd.Id,
-                ChatRoomId = room.Id,
-                AddedById = host.Id
+                var userToAdd = usersToAdd.FirstOrDefault(x => x.PublicId == userData.UserId);
+                var newBlob = new ChatRoomKeyBlob
+                {
+                    UserId = userToAdd.Id,
+                    ChatRoomId = room.Id,
+                    EncryptedRoomKey = userData.EncryptedUserKey,
+                    CreatedAtUtc = DateTime.UtcNow
+                };
 
-            };
+                var newMembership = new ChatRoomMembership
+                {
+                    UserId = userToAdd.Id,
+                    ChatRoomId = room.Id,
+                    AddedById = host.Id
 
-            await _chatRoomKeyBlobRepository.Add(newBlob, cancellationToken);
-            await _chatRoomMembershipRepository.Add(newMembership, cancellationToken);
-        }
+                };
 
-        await _unitOfWork.Commit(cancellationToken);
+                await _chatRoomKeyBlobRepository.Add(newBlob, cancellationToken);
+                await _chatRoomMembershipRepository.Add(newMembership, cancellationToken);
+            }
 
-        return room.PublicId;
+            await _unitOfWork.Commit(cancellationToken);
+
+            return room.PublicId;
         }
         catch
         {

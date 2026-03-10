@@ -10,7 +10,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatShaker.ChatMauiApp.Services
+namespace ChatShaker.ChatMauiApp.Services.Api
 {
     public class ApiService : IApiService
     {

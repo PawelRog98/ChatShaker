@@ -14,6 +14,7 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         private readonly IAuthService _authService;
         private readonly INavigationService _navigationService;
         private readonly IAppPopupService _popupService;
+        private readonly ICryptoService _cryptoService;
 
         #region Properties
         private string _email;
@@ -49,11 +50,12 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         public DelegateCommand LoginCommand { get; set; }
         public DelegateCommand MoveToRegisterCommand { get; set; }
 
-        public LoginPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService)
+        public LoginPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService, ICryptoService cryptoService)
         {
             _authService = authService;
             _navigationService = navigationService;
             _popupService = popupService;
+            _cryptoService = _cryptoService;
 
             LoginCommand = new DelegateCommand(async () => await  Login());
             MoveToRegisterCommand = new DelegateCommand(async () => await MoveToRegister());
@@ -82,7 +84,10 @@ namespace ChatShaker.ChatMauiApp.ViewModels
                 var result = await _authService.Login(loginDto);
 
                 if (result.Success)
-                    await _navigationService.NavigateAsync("/MainPage");
+                {
+                    await _cryptoService.SaveIdentityKey(result.Data.UserId);
+                    await _navigationService.NavigateAsync("ChatListPage");
+                }
             }
             catch (Exception ex)
             {

@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using ChatShaker.Api.Helpers;
 using ChatShaker.Application.Chats.Commands.AddMemberToRoom;
+using ChatShaker.Application.Chats.Commands.InitializeNewDirectChat;
 using ChatShaker.Application.Chats.CreateChatRoom.Commands;
+using ChatShaker.Application.Chats.Queries.GetUserRooms;
+using ChatShaker.Application.MessagesManagment.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +26,12 @@ public class ChatRoomController : ControllerBase
     [HttpPost("create-room")]
     public async Task<IActionResult> CreateRoom([FromBody] CreateChatRoomDto createChatRoomDto, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CreateChatRoomCommand(createChatRoomDto), cancellationToken);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+        
+        var result = await _mediator.Send(new CreateChatRoomCommand(createChatRoomDto, long.Parse(userId)), cancellationToken);
 
         return ApiResponse.Ok(result);
     }
@@ -39,5 +47,35 @@ public class ChatRoomController : ControllerBase
         var result = await _mediator.Send(new AddMemberToRoomCommand(addMemberToRoomDto, long.Parse(userId)), cancellationToken);
 
         return ApiResponse.Ok();
+    }
+
+    [HttpGet("get-all")]
+    public async Task<IActionResult> GetRooms(CancellationToken  cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+
+        var result = await _mediator.Send(new GetUserRoomsQuery(Int64.Parse(userId)),  cancellationToken);
+        
+        return ApiResponse.Ok(result);
+    }
+
+    [HttpGet("{roomPublicId:guid}/messages")]
+    public async Task<IActionResult> GetHistoryMessages(Guid roomPublicId, [FromQuery] int pageIndex, [FromQuery] int pageSize)
+    {
+        var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, pageIndex, pageSize));
+        
+        return ApiResponse.Ok(result);
+    }
+
+    [HttpPut("initialize-chat")]
+    public async Task<IActionResult> InitializeChat([FromBody] ChatRoomDto chatRoomDto,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto), cancellationToken);
+        
+        return ApiResponse.Ok(result);
     }
 }

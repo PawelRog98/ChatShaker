@@ -1,0 +1,48 @@
+using System.Net.Http.Json;
+using ChatShaker.ChatMauiApp.Helpers;
+using ChatShaker.ChatMauiApp.Models.Dto;
+using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Microsoft.AspNetCore.WebUtilities;
+
+namespace ChatShaker.ChatMauiApp.Services.Api;
+
+public class KeyApiService : IKeyApiService
+{
+    private readonly HttpClient _httpClient;
+
+    public KeyApiService(IHttpClientFactory factory)
+    {
+        _httpClient = factory.CreateClient("ShakerApiClient");
+    }
+
+    public async Task<Response<object>> UploadIdentity(UserKeyDataDto userKey)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/keys/save-identity", userKey);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
+    }
+
+    public async Task<Response<List<UserKeyDataDto>>> GetPublicIdentities(List<Guid> userIds)
+    {
+        var queryParams = new Dictionary<string, string>();
+        for (int i = 0; i < userIds.Count; i++)
+        {
+            queryParams.Add($"userId{i}", userIds[i].ToString());
+        }
+        
+        string uri = QueryHelpers.AddQueryString("api/keys/get-public-identities",  queryParams);
+        var response = await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>(uri);
+        
+        return response;
+    }
+
+    public async Task<Response<string>> GetRoomKey(Guid roomPublicId)
+    {
+        return await _httpClient.GetFromJsonAsync<Response<string>> ($"api/keys/get-room-key/{roomPublicId}");
+    }
+
+    public async Task<Response<object>> SaveRoomKey(RoomDto roomKeys)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/keys/create-room", roomKeys);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
+    }
+}

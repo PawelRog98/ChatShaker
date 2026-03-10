@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChatShaker.Application.Chats.Queries.GetUserRooms;
+using ChatShaker.Application.Friendships.Query;
+using ChatShaker.Application.Users.Commands.SaveIdentity;
 
 namespace ChatShaker.Application.Mapping
 {
@@ -19,6 +22,9 @@ namespace ChatShaker.Application.Mapping
             LoginMappings();
             RegisterMappings();
             Usermappings();
+            ChatRoomMappings();
+            KeysMappings();
+            FriendRequestsMappings();
         }
 
         private void Usermappings()
@@ -35,5 +41,26 @@ namespace ChatShaker.Application.Mapping
         private void RegisterMappings()
         {
         }
+
+        private void ChatRoomMappings()
+        {
+            CreateMap<ChatRoom, ChatListItemDto>()
+                .ForMember(d => d.RoomPublicId, o => o.MapFrom(s => s.PublicId))
+                .ForMember(d => d.Name, o => o.MapFrom(s => s.Name));
+        }
+
+        private void KeysMappings()
+        {
+            CreateMap<UserPublicKey, UserKeyDataDto>()
+                .ForMember(d => d.PublicUserId, o => o.MapFrom(s => s.User.PublicId));
+        }
+
+        private void FriendRequestsMappings()
+        {
+            CreateMap<FriendRequest, UserRequestsDto>()
+                .ForMember(d => d.Username,o => o.MapFrom(s => s.Sender == null ? s.Recipient.FirstName : s.Sender.FirstName))
+                .ForMember(d=>d.SentAtUtc, o=> o.MapFrom(s=>s.CreatedAtUtc));
+        }
+            
     }
 }

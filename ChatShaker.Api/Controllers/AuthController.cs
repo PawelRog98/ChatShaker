@@ -27,17 +27,17 @@ namespace ChatShaker.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new RegisterCommand(registerDto));
+            var result = await _mediator.Send(new RegisterCommand(registerDto), cancellationToken);
 
             return ApiResponse.Ok(result);
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+        public async Task<IActionResult> Refresh([FromBody] string refreshToken,  CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new RefreshCommand(refreshToken));
+            var result = await _mediator.Send(new RefreshCommand(refreshToken), cancellationToken);
 
             return ApiResponse.Ok(result);
         }

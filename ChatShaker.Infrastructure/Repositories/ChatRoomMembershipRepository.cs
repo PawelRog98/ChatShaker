@@ -19,6 +19,11 @@ public class ChatRoomMembershipRepository : IChatRoomMembershipRepository
         await _context.ChatRoomMemberships.AddAsync(member, cancellationToken);
     }
 
+    public async Task<bool> Exists(long roomId, long userId, CancellationToken cancellationToken)
+    {
+        return await _context.ChatRoomMemberships.AnyAsync(x=>x.ChatRoomId == roomId && x.UserId == userId, cancellationToken);
+    }
+
     public async Task<IEnumerable<ChatRoomMembership>> GetByRoomId(long roomId, CancellationToken cancellationToken)
     {
         return await _context.ChatRoomMemberships

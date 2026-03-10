@@ -23,6 +23,8 @@ namespace ChatShaker.Infrastructure.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<ChatRoomKeyBlob> ChatRoomKeyBlobs { get; set; }
         public DbSet<MessageStatus> MessageStatuses { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<Friendship> Friendships { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

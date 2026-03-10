@@ -62,7 +62,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
         {
             MessageId = message.Id,
             Status = Domain.Enums.MessageStatusEnum.Sent,
-            UpdatedAtUtc = DateTime.UtcNow
+            UpdateAtUtc = DateTime.UtcNow
         };
 
         await _messageRepository.SaveStatus(messageStatus, cancellationToken);

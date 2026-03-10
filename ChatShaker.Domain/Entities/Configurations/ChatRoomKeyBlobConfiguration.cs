@@ -8,6 +8,14 @@ public class ChatRoomKeyBlobConfiguration : IEntityTypeConfiguration<ChatRoomKey
     public void Configure(EntityTypeBuilder<ChatRoomKeyBlob> builder)
     {
         builder.HasKey(x=> new {x.ChatRoomId, x.UserId});
+        
+        builder.HasOne(x => x.ChatRoom)
+            .WithMany(x => x.ChatRoomKeyBlobs)
+            .HasForeignKey(x => x.ChatRoomId);
+
+        builder.HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId);
     }
     
 }

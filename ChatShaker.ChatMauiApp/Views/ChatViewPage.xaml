@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatShaker.ChatMauiApp.Views.ChatViewPage"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             xmlns:dtos="clr-namespace:ChatShaker.ChatMauiApp.Models.Dto"
+             x:DataType="viewModels:ChatViewModel"
+             xmlns:prism="http://prismlibrary.com"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
+             Title="ChatViewPage">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <CollectionView 
+            Grid.Row="1"
+            ItemsSource="{Binding Messages}"
+            VerticalOptions="Fill"
+            RemainingItemsThreshold="3"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dtos:MessageDto">
+                    <Frame Padding="8"
+                           CornerRadius="10">
+                        <StackLayout Spacing="2">
+                            <Label
+                                FontSize="12"
+                                Opacity="0.7"
+                                Text="{Binding SenderName}">
+                            </Label>
+                            <Label
+                                FontSize="16"
+                                Text="{Binding CipherText}" />
+
+                            <StackLayout Orientation="Horizontal">
+                                <Label Text="{Binding SentDataTimeUtc, StringFormat='{0:yyyy-MM-dd HH:mm}'}"
+                                       FontSize="10" />
+                                <Label Text="{Binding Status}" FontSize="10" />
+                            </StackLayout>
+                        </StackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+            <Entry 
+                Text="{Binding OngoingText}" 
+                Placeholder="Write your message..." />
+            
+            <Button Grid.Column="1"
+                    Text="Send"
+                    Command="{Binding SendMessageCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>

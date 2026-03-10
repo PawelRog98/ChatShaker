@@ -18,7 +18,7 @@ public class AddUserKeysTable : Migration
 
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
                 .Create.ForeignKey("FK_UserPublicKeys_UserId")
-                .FromTable("UserPublicKeys").ForeignColumn("userId")
+                .FromTable("UserPublicKeys").ForeignColumn("UserId")
                 .ToTable("Users").PrimaryColumn("Id")
                 .OnDelete(System.Data.Rule.None);
         }
@@ -29,7 +29,7 @@ public class AddUserKeysTable : Migration
         if(Schema.Table("UserPublicKeys").Exists())
         {
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.ForeignKey("FK_UserPublicKeys_UserId").OnTable("UserId");
+                .Delete.ForeignKey("FK_UserPublicKeys_UserId").OnTable("UserPublicKeys");
 
             Delete.Table("UserPublicKeys");
         }

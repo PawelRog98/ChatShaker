@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ChatShaker.Application.Interfaces;
 
 namespace ChatShaker.Application.Users.Commands.Register
 {
@@ -29,12 +30,21 @@ namespace ChatShaker.Application.Users.Commands.Register
         private readonly IMapper _mapper;
         private readonly ITokenRepository _tokenRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
-        public RegisterCommandHandler(IUserRepository userRepository ,IMapper mapper, ITokenRepository tokenRepository, IPasswordHasher<User> passwordHasher)
+        private readonly ICodeGenerationService _codeGeneration;
+        private readonly IRoleRepository _roleRepository;
+        public RegisterCommandHandler(IUserRepository userRepository 
+            ,IMapper mapper
+            ,ITokenRepository tokenRepository
+            ,IPasswordHasher<User> passwordHasher
+            ,ICodeGenerationService codeGeneration
+            ,IRoleRepository roleRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _tokenRepository = tokenRepository;
             _passwordHasher = passwordHasher;
+            _codeGeneration = codeGeneration;
+            _roleRepository = roleRepository;
         }
 
         public async Task<Unit> Handle(RegisterCommand command, CancellationToken cancellationToken)
@@ -44,13 +54,17 @@ namespace ChatShaker.Application.Users.Commands.Register
             if (existedUser != null)
                 throw new BadAuthenticationException("A user with such an email already exists.");
 
+            var defaultRole = await _roleRepository.GetIdByName("User", cancellationToken);
+
             var user = new User
             {
                 Email = command.Register.Email,
                 PublicNick = command.Register.PublicNick,
                 FirstName = command.Register.FirstName,
                 LastName = command.Register.LastName,
-                DateOfBirth = command.Register.DateOfBirth.Value
+                DateOfBirth = command.Register.DateOfBirth.Value,
+                UserInvitationCode = _codeGeneration.GenerateCode(),
+                RoleId =  defaultRole.Id
             };
 
             var password = _passwordHasher.HashPassword(user, command.Register.Password);

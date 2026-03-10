@@ -10,4 +10,5 @@ public class UserPublicKey : ICommonData
     public User User { get; set; }
     public string PublicKey { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public string DeviceId {get;set;}
 }

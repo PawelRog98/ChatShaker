@@ -15,6 +15,8 @@ namespace ChatShaker.Domain.Entities
         {
             Tokens = new HashSet<Token>();
             Suspensions = new HashSet<Suspension>();
+            ReceivedFriendRequests = new HashSet<FriendRequest>();
+            SentFriendRequests = new HashSet<FriendRequest>();
         }
         public long Id { get; set; }
         public Guid PublicId { get; set; }
@@ -31,8 +33,12 @@ namespace ChatShaker.Domain.Entities
         public string? AccountInfo { get; set; }
         public DateTime CreatedAtUtc { get; set; }
         public DateTime? ModifiedAtUtc { get; set; }
+        public string UserInvitationCode { get; set; }
 
         public ICollection<Token> Tokens { get; set; }
         public ICollection<Suspension> Suspensions { get; set;}
+        public ICollection<FriendRequest> SentFriendRequests { get; set; }
+        public ICollection<FriendRequest> ReceivedFriendRequests { get; set; }
+        //public ICollection<Friendship>  Friendships { get; set; }
     }
 }

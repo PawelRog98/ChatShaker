@@ -16,11 +16,13 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using System.Text;
+using ChatShaker.Application.Interfaces;
 using ChatShaker.Domain.Repositories;
 using ChatShaker.Infrastructure.Repositories;
 using ChatShaker.Domain.Serivces;
 using ChatShaker.Domain.Services;
 using ChatShaker.Infrastructure.ChatRoomServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ChatShaker.Infrastructure
 {
@@ -32,14 +34,19 @@ namespace ChatShaker.Infrastructure
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEncryptionService, EncryptionService>();
+            services.AddScoped<ICodeGenerationService, CodeGenerationService>();
             
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IChatRoomMembershipRepository, ChatRoomMembershipRepository>();
             services.AddScoped<IChatRoomKeyBlobRepository, ChatRoomKeyBlobRepository>();
             services.AddScoped<IChatRoomRepository, ChatRoomRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IMessageStatusRepository, MessageStatusRepository>();
+            services.AddScoped<IUserPublicKeyRepository, UserPublicKeyRepository>();
+            services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+            services.AddScoped<IFriendshipRepository, FriendshipRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             #region JWT
@@ -66,6 +73,25 @@ namespace ChatShaker.Infrastructure
                         ValidAudience = jwtSettings.JwtIssuer,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JwtKey)),
                     };
+
+                    conf.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                                context.Token = accessToken;
+
+                            return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            Console.WriteLine($"Auth failed: {context.Exception.Message}");
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
             }
             #endregion
@@ -91,7 +117,7 @@ namespace ChatShaker.Infrastructure
 
                 var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
                 services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString).LogTo(Console.WriteLine));
                 services.AddDatabaseDeveloperPageExceptionFilter();
             }
             #endregion

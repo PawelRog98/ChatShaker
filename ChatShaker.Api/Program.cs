@@ -87,11 +87,9 @@ namespace ChatShaker.Api
 
             if (!app.Environment.IsEnvironment("IntegrationTests"))
             {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-                    await seeder.Seed();
-                }
+                using var scope = app.Services.CreateScope();
+                var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+                await seeder.Seed();
             }
             app.UseAuthorization();
 
