@@ -61,5 +61,13 @@ namespace ChatShaker.Infrastructure.Repositories
             var result = await _context.SaveChangesAsync(cancellationToken);
             Console.WriteLine("SaveChanges result: " + result);
         }
+
+        public async Task<List<User>> GetFriends(long userId, CancellationToken cancellationToken)
+        {
+            return await _context.Friendships
+                .Where(x=>x.User1Id == userId ||  x.User2Id == userId)
+                .Select(x=>x.User1Id == userId ? x.User2 :  x.User1)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

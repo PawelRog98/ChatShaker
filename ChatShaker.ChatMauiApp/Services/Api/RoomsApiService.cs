@@ -17,15 +17,24 @@ public class RoomsApiService : IRoomApiService
 
     public async Task<Response<List<ChatListItem>>> GetRooms()
     {
-        try
-        {
-            var items = await _httpClient.GetFromJsonAsync<Response<List<ChatListItem>>>($"api/chatroom/get-all");
+        var items = await _httpClient.GetFromJsonAsync<Response<List<ChatListItem>>>($"api/chatroom/get-all");
 
-            return items;
-        }
-        catch (Exception e)
-        {
-            throw;
-        }
+        return items;
+    }
+
+    public async Task<Response<RoomDto>> GetRoom(Guid publicId)
+    {
+        var room = await _httpClient.GetFromJsonAsync<Response<RoomDto>>($"api/chatroom/{publicId}");
+        return room;
+    }
+
+    public async Task<Response<bool>> CheckIfRoomInitialized(Guid publicId)
+    {
+        return await _httpClient.GetFromJsonAsync<Response<bool>>($"api/chatroom/initialization-status/{publicId}");
+    }
+
+    public async Task<Response<long>> GetKeyVersion(Guid publicId)
+    {
+        return await _httpClient.GetFromJsonAsync<Response<long>>($"api/chatroom/key-version/{publicId}");
     }
 }

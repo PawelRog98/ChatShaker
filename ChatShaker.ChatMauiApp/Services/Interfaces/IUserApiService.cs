@@ -5,5 +5,6 @@ namespace ChatShaker.ChatMauiApp.Services.Api;
 
 public interface IUserApiService
 {
-    Task<Response<List<UserInfoDto>>> GetFriends(string name);
+    Task<Response<List<UserItemDto>>> GetFriends();
+    Task<Response<List<UserKeyDataDto>>> GetParticipants(List<Guid> userIds);
 }

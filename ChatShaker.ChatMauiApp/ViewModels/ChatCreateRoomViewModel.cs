@@ -27,6 +27,7 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
 
     private readonly IRoomKeyService _roomKeyService;
     private readonly IUserApiService _userApiService;
+    private readonly IKeyApiService _keyApiService;
     private readonly INavigationService _navigationService;
 
     public ObservableCollection<SelectableUser> Users { get; } = new();
@@ -36,10 +37,11 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
     
     public bool IsLoading { get; private set; }
 
-    public ChatCreateRoomViewModel(IRoomKeyService roomKeyService,  IUserApiService userApiService,  INavigationService navigationService)
+    public ChatCreateRoomViewModel(IRoomKeyService roomKeyService,  IUserApiService userApiService, IKeyApiService keyApiService,  INavigationService navigationService)
     {
         _roomKeyService = roomKeyService;
         _userApiService = userApiService;
+        _keyApiService = keyApiService;
         _navigationService = navigationService;
 
         ConfirmCommand = new DelegateCommand(Confirm);
@@ -49,7 +51,7 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
     {
         IsLoading = true;
 
-        var users = await _userApiService.GetFriends(_name);
+        var users = await _userApiService.GetFriends();
         foreach (var user in users.Data)
             Users.Add(new SelectableUser(user));
         
@@ -69,7 +71,9 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
             .Select(x=>x.User)
             .ToList();
         
-        await _roomKeyService.GenerateAndSaveRoomKey(selectedUsers, _name);
+        var usersData = await _keyApiService.GetPublicIdentities(selectedUsers.Select(x=>x.PublicId).ToList());
+        
+        await _roomKeyService.GenerateAndSaveRoomKey(usersData.Data, _name);
         IsLoading = false;
 
         await _navigationService.GoBackAsync();

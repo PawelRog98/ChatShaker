@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Models.Enums;
+using ChatShaker.ChatMauiApp.Services.Api;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
@@ -18,6 +19,10 @@ public class ChatViewModel : BaseViewModel, INavigationAware
     
     private readonly IChatConnectionService _chatHub;
     private readonly IChatDataService _chatDataService;
+    private readonly IRoomKeyService _roomKeyService;
+    private readonly IUserApiService _userApiService;
+    private readonly IRoomApiService _roomApiService;
+    private readonly IKeyApiService _keyApiService;
     
     public ChatHistoryViewModel History { get; }
 
@@ -29,10 +34,21 @@ public class ChatViewModel : BaseViewModel, INavigationAware
     
     public ObservableCollection<MessageDto> Messages { get; } = new();
 
-    public ChatViewModel(IChatConnectionService chatHub, IChatDataService chatDataService, ChatHistoryViewModel history)
+    public ChatViewModel(IChatConnectionService chatHub, 
+        IChatDataService chatDataService, 
+        IRoomKeyService roomKeyService,
+        IUserApiService userApiService,
+        IRoomApiService roomApiService,
+        IKeyApiService  keyApiService,
+        ChatHistoryViewModel history)
     {
         _chatHub = chatHub;
         _chatDataService = chatDataService;
+        _roomKeyService = roomKeyService;
+        _userApiService = userApiService;
+        _roomApiService = roomApiService;
+        _keyApiService = keyApiService;
+        
         History = history;
 
         SendMessageCommand = new DelegateCommand(SendMessage);
@@ -96,6 +112,16 @@ public class ChatViewModel : BaseViewModel, INavigationAware
             Messages.Insert(0,message);
     }
 
+    private async Task InitializeChatData()
+    {
+        var response =  await _roomApiService.GetRoom(_roomId);
+
+        var room = response.Data;
+        var usersData = await _userApiService.GetParticipants(room.Keys.Select(x => x.UserId).ToList());
+        
+        await _roomKeyService.InitializeRoomKeyForExistingRoom(usersData.Data, room.PublicId.Value);
+    }
+
     public void OnNavigatedFrom(INavigationParameters parameters)
     {
         
@@ -104,6 +130,12 @@ public class ChatViewModel : BaseViewModel, INavigationAware
     public async void OnNavigatedTo(INavigationParameters parameters)
     {
         _roomId = parameters.GetValue<Guid>("RoomId");
+        
+        var isInitialized = await _roomApiService.CheckIfRoomInitialized(_roomId);
+        if (isInitialized.Data != true)
+        {
+            InitializeChatData();
+        }
         
         History.Reset();
         

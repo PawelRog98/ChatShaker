@@ -7,5 +7,7 @@ public class ChatRoomKeyBlob
     public long UserId { get; set; }
     public User User { get; set; }
     public string EncryptedRoomKey { get; set; }
+    public long Version { get; set; }
+    public string DeviceId { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }

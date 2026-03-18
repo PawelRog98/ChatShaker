@@ -1,9 +1,7 @@
 namespace ChatShaker.ChatMauiApp.Models.Dto;
 
-public class UserInfoDto
+public class UserItemDto
 {
     public Guid PublicId { get; set; }
     public string Name { get; set; }
-    public string PublicKey { get; set; }
-    public string DeviceId { get; set; }
 }

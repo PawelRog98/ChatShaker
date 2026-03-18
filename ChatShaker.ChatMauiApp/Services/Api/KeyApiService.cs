@@ -35,14 +35,37 @@ public class KeyApiService : IKeyApiService
         return response;
     }
 
-    public async Task<Response<string>> GetRoomKey(Guid roomPublicId)
+    public async Task<Response<string>> GetRoomKey(Guid roomPublicId, long version)
     {
-        return await _httpClient.GetFromJsonAsync<Response<string>> ($"api/keys/get-room-key/{roomPublicId}");
+        return await _httpClient.GetFromJsonAsync<Response<string>> ($"api/keys/get-room-key/{roomPublicId}/{version}");
+    }
+
+    public async Task<Response<List<UserKeyDataDto>>> GetUserIdentityKeys(Guid publicId)
+    {
+        return await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>($"api/keys/get-user-identity-keys/{publicId}");
     }
 
     public async Task<Response<object>> SaveRoomKey(RoomDto roomKeys)
     {
         var response = await _httpClient.PostAsJsonAsync("api/keys/create-room", roomKeys);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
+    }
+
+    public async Task<Response<object>> InitializeRoom(RoomDto room)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/keys/initialize-room-key", room);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
+    }
+    
+    public async Task<Response<object>> SaveNewRotation(Guid publicId, IEnumerable<RoomKeyDataDto> keysData)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/keys/rotate-room-keys/{publicId}", keysData);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
+    }
+
+    public async Task<Response<object>> SaveOtherUserRoomKey(Guid roomPublicId, List<RoomKeyDataDto> keysData)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/keys/save-user-room-keys/{roomPublicId}", keysData);
         return await response.Content.ReadFromJsonAsync<Response<object>>();
     }
 }

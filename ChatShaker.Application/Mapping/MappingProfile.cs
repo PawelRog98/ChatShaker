@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using ChatShaker.Application.Chats.Queries.GetUserRooms;
 using ChatShaker.Application.Friendships.Query;
 using ChatShaker.Application.Users.Commands.SaveIdentity;
+using ChatShaker.Application.Users.Queries.GetFriends;
 
 namespace ChatShaker.Application.Mapping
 {
@@ -33,6 +34,10 @@ namespace ChatShaker.Application.Mapping
                 .ForMember(d => d.RoleName, o => o.MapFrom(s => s.Role.RoleName));
 
             CreateMap<AuthTokenModel, AuthTokenDto>();
+
+            CreateMap<User, UserInfoDto>()
+                .ForMember(d => d.Name, o => o.MapFrom(s => s.FirstName))
+                .ForMember(d => d.PublicId, o => o.MapFrom(s => s.PublicId));
         }
         private void LoginMappings()
         {

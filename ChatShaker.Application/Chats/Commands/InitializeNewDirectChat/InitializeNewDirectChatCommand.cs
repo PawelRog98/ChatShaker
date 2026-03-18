@@ -50,7 +50,7 @@ public class InitializeNewDirecChatCommandHandler : IRequestHandler<InitializeNe
 
             await _unitOfWork.Commit(cancellationToken);
         }
-        catch (Exception e)
+        catch 
         {
             await _unitOfWork.Rollback(cancellationToken);
             throw;

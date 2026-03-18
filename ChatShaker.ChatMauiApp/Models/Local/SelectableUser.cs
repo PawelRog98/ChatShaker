@@ -4,7 +4,7 @@ namespace ChatShaker.ChatMauiApp.Models.Local;
 
 public class SelectableUser : BindableBase
 {
-    public UserInfoDto User { get; }
+    public UserItemDto User { get; }
 
     private bool _isSelected;
 
@@ -14,7 +14,7 @@ public class SelectableUser : BindableBase
         set { SetProperty(ref _isSelected, value); }
     }
 
-    public SelectableUser(UserInfoDto user)
+    public SelectableUser(UserItemDto user)
     {
         User = user;
     }
