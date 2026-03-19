@@ -19,10 +19,13 @@ public class ChatRoomKeyBlobRepository : IChatRoomKeyBlobRepository
         await _context.ChatRoomKeyBlobs.AddAsync(blob, cancellationToken);
     }
 
-    public async Task<ChatRoomKeyBlob?> Get(long roomId, long userId, CancellationToken cancellationToken)
+    public async Task<ChatRoomKeyBlob?> Get(Guid roomId, long userId, long version, string deviceId, CancellationToken cancellationToken)
     {
         return await _context.ChatRoomKeyBlobs
-            .FirstOrDefaultAsync(x => x.UserId == userId && x.ChatRoomId == roomId, cancellationToken);
+            .FirstOrDefaultAsync(x => x.UserId == userId && 
+                                      x.ChatRoom.PublicId == roomId &&
+                                      x.Version == version &&
+                                      x.DeviceId == deviceId, cancellationToken);
     }
 
     public async Task<IEnumerable<ChatRoomKeyBlob>> GetByRoomId(long roomId, CancellationToken cancellationToken)

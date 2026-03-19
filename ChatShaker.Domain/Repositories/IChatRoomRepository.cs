@@ -9,4 +9,5 @@ public interface IChatRoomRepository
     Task<ChatRoom?> GetByPublicId(Guid publicId, CancellationToken cancellationToken);
     Task<IEnumerable<ChatRoom>> GetByUserId(long userId, CancellationToken cancellationToken);
     Task Add(ChatRoom room, CancellationToken cancellationToken);
+    Task<long> GetNewestRoomVersion(Guid publicId, CancellationToken cancellationToken);
 }

@@ -3,6 +3,8 @@ using ChatShaker.Api.Helpers;
 using ChatShaker.Application.Chats.Commands.AddMemberToRoom;
 using ChatShaker.Application.Chats.Commands.InitializeNewDirectChat;
 using ChatShaker.Application.Chats.CreateChatRoom.Commands;
+using ChatShaker.Application.Chats.GetNewestRoomVersion;
+using ChatShaker.Application.Chats.Queries.CheckIfRoomIsInitialized;
 using ChatShaker.Application.Chats.Queries.GetUserRooms;
 using ChatShaker.Application.MessagesManagment.Queries;
 using MediatR;
@@ -75,6 +77,26 @@ public class ChatRoomController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto), cancellationToken);
+        
+        return ApiResponse.Ok(result);
+    }
+
+    [HttpGet("initialization-status/{publicId}")]
+    [ProducesResponseType(typeof(Response<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetInfoIfInitialized(Guid publicId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new CheckIfRoomIsInitializedQuery(publicId), cancellationToken);
+        
+        return ApiResponse.Ok(result);
+    }
+
+    [HttpGet("key-version/{publicId}")]
+    [ProducesResponseType(typeof(Response<long>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetKeyVersion(Guid publicId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetNewestRoomVersionQuery(publicId), cancellationToken);
         
         return ApiResponse.Ok(result);
     }

@@ -46,4 +46,11 @@ public class ChatRoomRepository : IChatRoomRepository
             .Where(x => x.HostId == userId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<long> GetNewestRoomVersion(Guid publicId, CancellationToken cancellationToken)
+    {
+        return await _context.ChatRoomKeyBlobs
+            .Where(x => x.ChatRoom.PublicId == publicId)
+            .MaxAsync(x => (long?)x.Version ?? 0);
+    }
 }

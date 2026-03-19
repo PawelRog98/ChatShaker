@@ -35,12 +35,4 @@ public class UsersController : ControllerBase
         
         return ApiResponse.Ok(friends);
     }
-    
-    [HttpGet("get-public-identities")]
-    public async Task<IActionResult> GetPublicIdentities([FromQuery] List<Guid> userIds, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(new GetIdentityQuery(userIds), cancellationToken);
-        
-        return ApiResponse.Ok(result);
-    }
 }
