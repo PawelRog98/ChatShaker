@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ChatShaker.Domain\ChatShaker.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Keys\Queries\" />
+  </ItemGroup>
+
 </Project>

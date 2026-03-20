@@ -34,4 +34,9 @@ public class ChatRoomKeyBlobRepository : IChatRoomKeyBlobRepository
             .Where(x => x.ChatRoomId == roomId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task SaveNewRotation(List<ChatRoomKeyBlob> keysData, CancellationToken cancellationToken)
+    {
+        await _context.AddRangeAsync(keysData, cancellationToken);
+    }
 }

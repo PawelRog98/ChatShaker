@@ -25,19 +25,6 @@ public class ChatRoomController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("create-room")]
-    public async Task<IActionResult> CreateRoom([FromBody] CreateChatRoomDto createChatRoomDto, CancellationToken cancellationToken)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
-        if(string.IsNullOrWhiteSpace(userId))
-            return ApiResponse.BadRequest("User not found");
-        
-        var result = await _mediator.Send(new CreateChatRoomCommand(createChatRoomDto, long.Parse(userId)), cancellationToken);
-
-        return ApiResponse.Ok(result);
-    }
-
     [HttpPost("add-member")]
     public async Task<IActionResult> Addmember([FromBody] AddMemberToRoomDto addMemberToRoomDto, CancellationToken cancellationToken)
     {

@@ -139,7 +139,7 @@ public class RoomKeyService : IRoomKeyService
         }
         
         //await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{nextVersion}", roomKey.ToString());
-        await _keyApiService.SaveNewRotation(roomPublicId, publicKeys);
+        await _keyApiService.SaveNewKeys(roomPublicId, publicKeys);
     }
 
     public async Task ShareKeyDataWithUser(Guid roomPublicId, long version, IEnumerable<UserKeyDataDto> userKeys)
@@ -165,6 +165,6 @@ public class RoomKeyService : IRoomKeyService
             });
         }
         
-        await _keyApiService.SaveOtherUserRoomKey(roomPublicId, encryptedKeys);
+        await _keyApiService.SaveNewKeys(roomPublicId, encryptedKeys);
     }
 }

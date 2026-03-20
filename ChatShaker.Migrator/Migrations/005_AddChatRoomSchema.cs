@@ -94,7 +94,9 @@ public class AddChatRoomSchema : Migration
                 .WithColumn("ChatRoomId").AsInt64().NotNullable()
                 .WithColumn("UserId").AsInt64().NotNullable()
                 .WithColumn("EncryptedRoomKey").AsString(int.MaxValue).NotNullable()
-                .WithColumn("CreatedAtUtc").AsDateTime2().NotNullable();
+                .WithColumn("CreatedAtUtc").AsDateTime2().NotNullable()
+                .WithColumn("Version").AsInt64().NotNullable()
+                .WithColumn("DeviceId").AsString(64).NotNullable();
 
             Create.PrimaryKey("PK_ChatRoomKeyBlobs")
                 .OnTable("ChatRoomKeyBlobs")

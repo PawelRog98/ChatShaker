@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using ChatShaker.Api.Helpers;
+using ChatShaker.Application.Chats.CreateChatRoom.Commands;
+using ChatShaker.Application.Keys.Commands.SaveNewRotation;
 using ChatShaker.Application.Keys.GetRoomKey;
 using ChatShaker.Application.Users.Commands.SaveIdentity;
 using ChatShaker.Application.Users.Queries.GetIdentity;
@@ -34,6 +36,22 @@ public class KeysController :  ControllerBase
         return ApiResponse.Ok();
     }
     
+    [HttpPost("create-room")]
+    [ProducesResponseType(typeof(Response<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateRoom([FromBody] CreateChatRoomDto createChatRoomDto, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+        
+        var result = await _mediator.Send(new CreateChatRoomCommand(createChatRoomDto, long.Parse(userId)), cancellationToken);
+
+        return ApiResponse.Ok(result);
+    }
+    
     [HttpGet("get-public-identities")]
     [ProducesResponseType(typeof(Response<List<UserKeyDataDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
@@ -46,6 +64,7 @@ public class KeysController :  ControllerBase
 
     [HttpGet("get-room-key")]
     [ProducesResponseType(typeof(Response<List<UserKeyDataDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRoomKey([FromBody] RoomKeyReqestDto roomKeyReqestDto,
         CancellationToken cancellationToken)
@@ -58,5 +77,16 @@ public class KeysController :  ControllerBase
         var result = await _mediator.Send(new GetRoomKeyQuery(long.Parse(userId), roomKeyReqestDto), cancellationToken);
         
         return ApiResponse.Ok(result, "Personal room key");
+    }
+
+    [HttpPost("new-room-keys/{publicId}")]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RotateKeys(Guid publicId, [FromBody] List<RotationDto> rotateKeysReqestDto,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new SaveNewRotationCommand(publicId, rotateKeysReqestDto), cancellationToken);
+        
+        return ApiResponse.Ok(result);
     }
 }

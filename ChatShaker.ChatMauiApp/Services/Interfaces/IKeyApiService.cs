@@ -10,6 +10,5 @@ public interface IKeyApiService
     Task<Response<string>> GetRoomKey(Guid roomPublicId, long version);
     Task<Response<object>> SaveRoomKey(RoomDto roomKeys);
     Task<Response<object>> InitializeRoom(RoomDto room);
-    Task<Response<object>> SaveNewRotation(Guid publicId, IEnumerable<RoomKeyDataDto> keysData);
-    Task<Response<object>> SaveOtherUserRoomKey(Guid roomPublicId, List<RoomKeyDataDto> keysData);
+    Task<Response<object>> SaveNewKeys(Guid publicId, IEnumerable<RoomKeyDataDto> keysData);
 }
