@@ -2,7 +2,7 @@ using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Repositories;
 using MediatR;
 
-namespace ChatShaker.Application.Chats.Commands.InitializeNewDirectChat;
+namespace ChatShaker.Application.Keys.Commands.InitializeNewDirectChat;
 
 public class InitializeNewDirectChatCommand : IRequest<Unit>
 {
@@ -43,7 +43,9 @@ public class InitializeNewDirecChatCommandHandler : IRequestHandler<InitializeNe
             
                 var chatBlob = chatRoom.ChatRoomKeyBlobs.FirstOrDefault(x=>x.UserId == user.Id);
                 chatBlob.EncryptedRoomKey = roomBlobDto.EncryptedRoomKey;
-            
+                chatBlob.DeviceId = roomBlobDto.DeviceId;
+                chatBlob.Version = 1;
+
             }
         
             chatRoom.IsInitialized = true;

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ChatShaker.Api.Helpers;
 using ChatShaker.Application.Chats.CreateChatRoom.Commands;
+using ChatShaker.Application.Keys.Commands.InitializeNewDirectChat;
 using ChatShaker.Application.Keys.Commands.SaveNewRotation;
 using ChatShaker.Application.Keys.GetRoomKey;
 using ChatShaker.Application.Users.Commands.SaveIdentity;
@@ -86,6 +87,17 @@ public class KeysController :  ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new SaveNewRotationCommand(publicId, rotateKeysReqestDto), cancellationToken);
+        
+        return ApiResponse.Ok(result);
+    }
+    
+    [HttpPut("initialize-room-key")]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InitializeChat([FromBody] ChatRoomDto chatRoomDto,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto), cancellationToken);
         
         return ApiResponse.Ok(result);
     }

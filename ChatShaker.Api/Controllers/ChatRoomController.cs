@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using ChatShaker.Api.Helpers;
 using ChatShaker.Application.Chats.Commands.AddMemberToRoom;
-using ChatShaker.Application.Chats.Commands.InitializeNewDirectChat;
 using ChatShaker.Application.Chats.CreateChatRoom.Commands;
 using ChatShaker.Application.Chats.GetNewestRoomVersion;
 using ChatShaker.Application.Chats.Queries.CheckIfRoomIsInitialized;
@@ -55,15 +54,6 @@ public class ChatRoomController : ControllerBase
     public async Task<IActionResult> GetHistoryMessages(Guid roomPublicId, [FromQuery] int pageIndex, [FromQuery] int pageSize)
     {
         var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, pageIndex, pageSize));
-        
-        return ApiResponse.Ok(result);
-    }
-
-    [HttpPut("initialize-chat")]
-    public async Task<IActionResult> InitializeChat([FromBody] ChatRoomDto chatRoomDto,
-        CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto), cancellationToken);
         
         return ApiResponse.Ok(result);
     }
