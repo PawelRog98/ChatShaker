@@ -33,6 +33,11 @@ public class AddFriendshipTables : Migration
                 .OnColumn("SenderId");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                .Create.Index("IX_FriendRequests_RecipientId")
+                .OnTable("FriendRequests")
+                .OnColumn("RecipientId");
+            
+            IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
                 .Create.Index("IX_FriendRequests_UniquePending")
                 .OnTable("FriendRequests")
                 .OnColumn("SenderId").Ascending()
@@ -84,19 +89,19 @@ public class AddFriendshipTables : Migration
         if (Schema.Table("FriendRequests").Exists())
         {
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_FriendRequests_UniquePending");
+                .Delete.Index("IX_FriendRequests_UniquePending").OnTable("FriendRequests");
 
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_FriendRequests_SenderId");
+                .Delete.Index("IX_FriendRequests_SenderId").OnTable("FriendRequests");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_FriendRequests_RecipientId");
+                .Delete.Index("IX_FriendRequests_RecipientId").OnTable("FriendRequests");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.ForeignKey("FK_FriendRequests_RecipientId");
+                .Delete.ForeignKey("FK_FriendRequests_RecipientId").OnTable("FriendRequests");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.ForeignKey("FK_FriendRequests_SenderId");
+                .Delete.ForeignKey("FK_FriendRequests_SenderId").OnTable("FriendRequests");
             
             Delete.Table("FriendRequests");
         }
@@ -104,19 +109,19 @@ public class AddFriendshipTables : Migration
         if (Schema.Table("Friendships").Exists())
         {
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_Friendships_UniquePair");
+                .Delete.Index("IX_Friendships_UniquePair").OnTable("Friendships");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_Friendships_User2Id");
+                .Delete.Index("IX_Friendships_User2Id").OnTable("Friendships");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_Friendships_User1Id");
+                .Delete.Index("IX_Friendships_User1Id").OnTable("Friendships");
 
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.ForeignKey("FK_Friendships_User2Id");
+                .Delete.ForeignKey("FK_Friendships_User2Id").OnTable("Friendships");
             
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.ForeignKey("FK_Friendships_User1Id");
+                .Delete.ForeignKey("FK_Friendships_User1Id").OnTable("Friendships");
             
             Delete.Table("Friendships");
         }

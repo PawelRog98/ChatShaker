@@ -24,7 +24,7 @@ public class AddUserInvitationCode : Migration
         if (Schema.Table("Users").Column("UserInvitationCode").Exists())
         {
             IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
-                .Delete.Index("IX_Users_UserInvitationCode");
+                .Delete.Index("IX_Users_UserInvitationCode").OnTable("Users");
             Delete.Column("UserInvitationCode").FromTable("Users");
         }
     }
