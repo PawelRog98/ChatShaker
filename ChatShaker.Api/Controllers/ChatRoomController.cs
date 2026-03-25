@@ -60,7 +60,7 @@ public class ChatRoomController : ControllerBase
 
     [HttpGet("initialization-status/{publicId}")]
     [ProducesResponseType(typeof(Response<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetInfoIfInitialized(Guid publicId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CheckIfRoomIsInitializedQuery(publicId), cancellationToken);
@@ -70,7 +70,7 @@ public class ChatRoomController : ControllerBase
 
     [HttpGet("key-version/{publicId}")]
     [ProducesResponseType(typeof(Response<long>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetKeyVersion(Guid publicId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetNewestRoomVersionQuery(publicId), cancellationToken);

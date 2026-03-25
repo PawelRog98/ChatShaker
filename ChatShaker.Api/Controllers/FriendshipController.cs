@@ -24,8 +24,8 @@ public class FriendshipController : ControllerBase
 
     [HttpPost("send")]
     [ProducesResponseType(typeof(Response<object>) ,StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SendRequest([FromQuery] string invitationCode, CancellationToken  cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -40,8 +40,8 @@ public class FriendshipController : ControllerBase
 
     [HttpPost("accept-invitation")]
     [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AcceptInvitation([FromBody] AcceptanceDecisionDto  acceptanceDecisionDto, CancellationToken  cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -56,7 +56,7 @@ public class FriendshipController : ControllerBase
 
     [HttpGet("get-recieved")]
     [ProducesResponseType(typeof(Response<UserRequestsDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetRecievedUserRequests(CancellationToken  cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -71,7 +71,7 @@ public class FriendshipController : ControllerBase
 
     [HttpGet("get-sent")]
     [ProducesResponseType(typeof(Response<UserRequestsDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetSentUserRequests(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

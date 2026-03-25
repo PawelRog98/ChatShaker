@@ -23,5 +23,11 @@
             MetaData = metaData;
             Message = message;
         }
+
+        public Response(string message, string[] errors)
+        {
+            Message = message;
+            Errors = errors;
+        }
     }
 }

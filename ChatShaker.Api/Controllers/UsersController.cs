@@ -22,8 +22,8 @@ public class UsersController : ControllerBase
 
     [HttpGet("get-friends")]
     [ProducesResponseType(typeof(Response<List<UserInfoDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetFriends(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

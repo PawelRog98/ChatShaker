@@ -39,8 +39,8 @@ public class KeysController :  ControllerBase
     
     [HttpPost("create-room")]
     [ProducesResponseType(typeof(Response<Guid>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateRoom([FromBody] CreateChatRoomDto createChatRoomDto, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -55,7 +55,7 @@ public class KeysController :  ControllerBase
     
     [HttpGet("get-public-identities")]
     [ProducesResponseType(typeof(Response<List<UserKeyDataDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetPublicIdentities([FromQuery] List<Guid> userIds, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetIdentityQuery(userIds), cancellationToken);
@@ -65,8 +65,8 @@ public class KeysController :  ControllerBase
 
     [HttpGet("get-room-key")]
     [ProducesResponseType(typeof(Response<List<UserKeyDataDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRoomKey([FromBody] RoomKeyReqestDto roomKeyReqestDto,
         CancellationToken cancellationToken)
     {
@@ -82,7 +82,7 @@ public class KeysController :  ControllerBase
 
     [HttpPost("new-room-keys/{publicId}")]
     [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RotateKeys(Guid publicId, [FromBody] List<RotationDto> rotateKeysReqestDto,
         CancellationToken cancellationToken)
     {
@@ -93,7 +93,7 @@ public class KeysController :  ControllerBase
     
     [HttpPut("initialize-room-key")]
     [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> InitializeChat([FromBody] ChatRoomDto chatRoomDto,
         CancellationToken cancellationToken)
     {
