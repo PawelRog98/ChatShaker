@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="http://prismlibrary.com"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             x:DataType="viewModels:SendInvitationViewModel"
+             x:Class="ChatShaker.ChatMauiApp.Views.SendInvitationPage">
+    <VerticalStackLayout Padding="16" Spacing="16">
+        <Label Text="Send invitation" 
+               FontSize="20"
+               FontAttributes="Bold"/>
+        <Entry  Placeholder="Enter invitation code"
+                Text="{Binding OngoingText}"/>
+        <Button Text="Send invitation"
+                Command="{Binding SendInvitationCommand}"/>
+        
+        <CollectionView ItemsSource="{Binding SentInvitations}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="10" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding UserName}"
+                               VerticalOptions="Center"
+                               Grid.Column="0"
+                               Grid.Row="0"/>
+                        <Label Text="{Binding Status}"
+                               Grid.Column="1"
+                               Grid.Row="0"
+                               VerticalOptions="Center"/>
+                        
+                        <Label Text="{Binding SentAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" 
+                               Grid.Row="1"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="2"
+                               FontSize="12"
+                               TextColor="Gray"/>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentPage>

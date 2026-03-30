@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="http://prismlibrary.com"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             x:DataType="viewModels:MainPageViewModel"
+             x:Class="ChatShaker.ChatMauiApp.Views.Modals.MainView">
+    <Grid RowDefinitions="Auto,*">
+        <HorizontalStackLayout Padding="12" BackgroundColor="Aquamarine">
+            <Button Text="My chats"
+                    Command="{Binding NavigateRegionCommand}"
+                    CommandParameter="ChatListPage"/>
+        </HorizontalStackLayout>
+        
+        <ContentView Grid.Row="1"
+                     prism:RegionManager.RegionName="MainRegion"></ContentView>
+    </Grid>
+</ContentPage>

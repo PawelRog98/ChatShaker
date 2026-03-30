@@ -9,6 +9,7 @@
              xmlns:prism="http://prismlibrary.com"
              prism:ViewModelLocator.AutowireViewModel="Automatic"
              Title="ChatListPage">
+    
     <Grid RowDefinitions="Auto,*" Padding="12">
         <Entry Grid.Row="0" Text="{Binding Name}" Placeholder="Search..."></Entry>
         

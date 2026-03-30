@@ -3,7 +3,7 @@
     public class Response<T>
     {
         public T? Data { get; set; }
-        public bool Success { get; set; } = true;
+        public bool Success { get; set; }
         public string[] Errors { get; set; } = null;
         public dynamic? MetaData { get; set; } = null;
         public string Message { get; set; } = string.Empty;

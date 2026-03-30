@@ -40,7 +40,7 @@ public class RoomKeyService : IRoomKeyService
             var privateKey = Encoding.UTF8.GetBytes(privateKeyData);
             
             roomKey = await _cryptoService.DecryptRoomKey(roomKeyEncryptedData.Data, privateKey);
-            await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}", roomKey.ToString());
+            await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}", Convert.ToBase64String(roomKey));
         }
         else
         {
@@ -63,7 +63,7 @@ public class RoomKeyService : IRoomKeyService
 
         foreach(var user in userKeys)
         {
-            var publicKeyBytes = Encoding.UTF8.GetBytes(user.PublicKey);
+            var publicKeyBytes = Convert.FromBase64String(user.PublicKey);
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
 
             var dataToSave = new RoomKeyDataDto
@@ -93,7 +93,7 @@ public class RoomKeyService : IRoomKeyService
 
         foreach (var user in userKeys)
         {
-            var publicKeyBytes = Encoding.UTF8.GetBytes(user.PublicKey);
+            var publicKeyBytes = Convert.FromBase64String(user.PublicKey);
             
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
             
@@ -123,7 +123,7 @@ public class RoomKeyService : IRoomKeyService
         
         foreach (var user in userKeys)
         {
-            var publicKeyBytes = Encoding.UTF8.GetBytes(user.PublicKey);
+            var publicKeyBytes = Convert.FromBase64String(user.PublicKey);
             
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
             
@@ -138,7 +138,6 @@ public class RoomKeyService : IRoomKeyService
             publicKeys.Add(dataToSave);
         }
         
-        //await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{nextVersion}", roomKey.ToString());
         await _keyApiService.SaveNewKeys(roomPublicId, publicKeys);
     }
 
@@ -152,7 +151,7 @@ public class RoomKeyService : IRoomKeyService
 
         foreach (var device in userKeys)
         {
-            var newUserKey = Encoding.UTF8.GetBytes(device.PublicKey);
+            var newUserKey = Convert.FromBase64String(device.PublicKey);
             var encryptedRoomKey = await _cryptoService.EncryptRoomKey(roomKey, newUserKey);
             
             encryptedKeys.Add(new RoomKeyDataDto
