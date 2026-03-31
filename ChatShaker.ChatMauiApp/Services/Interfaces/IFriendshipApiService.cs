@@ -6,5 +6,7 @@ namespace ChatShaker.ChatMauiApp.Services.Interfaces;
 public interface IFriendshipApiService
 {
     Task<Response<object>> SendInvitation(string invitationCode);
-    Task<Response<List<SentInvitationDto>>> GetSentInvitations();
+    Task<Response<List<InvitationDto>>> GetSentInvitations();
+    Task<Response<List<InvitationDto>>> GetRecievedInvitations();
+    Task<Response<object>> RespondToInvitation(Guid invitationId, bool accept);
 }

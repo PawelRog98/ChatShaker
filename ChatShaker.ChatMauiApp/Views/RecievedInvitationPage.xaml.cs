@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ChatShaker.ChatMauiApp.Views;
 
-public partial class MainView : ContentPage
+public partial class RecievedInvitationPage : ContentPage
 {
-    public MainView()
+    public RecievedInvitationPage()
     {
         InitializeComponent();
     }

@@ -40,8 +40,9 @@ namespace ChatShaker.ChatMauiApp
                         container.RegisterForNavigation<LoginPage, LoginPageViewModel>();
                         container.RegisterForNavigation<RegisterPage,  RegisterPageViewModel>();
                         container.RegisterForNavigation<ChatListPage, ChatListViewModel>();
-                        container.RegisterForNavigation<MainPage, MainPageViewModel>();
+                        container.RegisterForNavigation<MainView, MainPageViewModel>();
                         container.RegisterForNavigation<SendInvitationPage, SendInvitationViewModel>();
+                        container.RegisterForNavigation<RecievedInvitationPage, RecievedInvitationViewModel>();
                         container.RegisterForNavigation<MainPage>();
 
                     });

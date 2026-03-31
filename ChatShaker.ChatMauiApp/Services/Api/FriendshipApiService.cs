@@ -25,8 +25,25 @@ public class FriendshipApiService : IFriendshipApiService
         return await response.Content.ReadFromJsonAsync<Response<object>>();
     }
 
-    public async Task<Response<List<SentInvitationDto>>> GetSentInvitations()
+    public async Task<Response<List<InvitationDto>>> GetSentInvitations()
     {
-        return await _httpClient.GetFromJsonAsync<Response<List<SentInvitationDto>>>("api/friendship/get-sent");
+        return await _httpClient.GetFromJsonAsync<Response<List<InvitationDto>>>("api/friendship/get-sent");
+    }
+
+    public async Task<Response<List<InvitationDto>>> GetRecievedInvitations()
+    {
+        return await _httpClient.GetFromJsonAsync<Response<List<InvitationDto>>>("api/friendship/get-recieved");
+    }
+
+    public async Task<Response<object>> RespondToInvitation(Guid invitationId, bool accept)
+    {
+        var decision = new AcceptanceDecisionDto
+        {
+            InvitationRequestId = invitationId,
+            IsAccepted = accept
+        };
+        
+        var response = await _httpClient.PostAsJsonAsync("api/friendship/accept-invitation", decision);
+        return await response.Content.ReadFromJsonAsync<Response<object>>();
     }
 }

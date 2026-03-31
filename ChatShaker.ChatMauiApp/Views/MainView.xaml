@@ -5,13 +5,23 @@
              xmlns:prism="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
              x:DataType="viewModels:MainPageViewModel"
-             x:Class="ChatShaker.ChatMauiApp.Views.Modals.MainView">
+             x:Class="ChatShaker.ChatMauiApp.Views.MainView">
     <Grid RowDefinitions="Auto,*">
-        <HorizontalStackLayout Padding="12" BackgroundColor="Aquamarine">
-            <Button Text="My chats"
-                    Command="{Binding NavigateRegionCommand}"
-                    CommandParameter="ChatListPage"/>
-        </HorizontalStackLayout>
+        <ScrollView Orientation="Horizontal" Grid.Row="0" BackgroundColor="Aquamarine">
+            <HorizontalStackLayout Padding="12" Spacing="10">
+                <Button Text="My chats"
+                        Command="{Binding NavigateRegionCommand}"
+                        CommandParameter="ChatListPage"/>
+                
+                <Button Text="Send Invitation"
+                        Command="{Binding NavigateRegionCommand}"
+                        CommandParameter="SendInvitationPage"/>
+                
+                <Button Text="Recieved Invitations"
+                        Command="{Binding NavigateRegionCommand}"
+                        CommandParameter="RecievedInvitationPage"/>
+            </HorizontalStackLayout>
+        </ScrollView>
         
         <ContentView Grid.Row="1"
                      prism:RegionManager.RegionName="MainRegion"></ContentView>

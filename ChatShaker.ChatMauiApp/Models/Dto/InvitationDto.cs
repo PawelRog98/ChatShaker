@@ -1,6 +1,6 @@
 namespace ChatShaker.ChatMauiApp.Models.Dto;
 
-public class SentInvitationDto
+public class InvitationDto
 {
     public Guid PublicId { get; set; }
     public string UserName { get; set; }

@@ -20,7 +20,7 @@ public class SendInvitationViewModel : BaseViewModel, INavigationAware
     private readonly IFriendshipApiService _friendshipApiService;
     private readonly IAppPopupService _popupService;
 
-    public ObservableCollection<SentInvitationDto> SentInvitations { get; } = new();
+    public ObservableCollection<InvitationDto> SentInvitations { get; } = new();
     public DelegateCommand SendInvitationCommand { get; }
 
     public SendInvitationViewModel(IFriendshipApiService friendshipApiService,  IAppPopupService popupService)

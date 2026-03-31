@@ -25,16 +25,24 @@ namespace ChatShaker.ChatMauiApp.ViewModels
             {
                 var token = await _authService.GetAccessToken();
 
-                //Application.Current.MainPage = new AppShell();
                 if (token != null)
-                    await _navigationService.NavigateAsync("ChatListPage");
+                {
+                    // Navigate to MainView and load ChatListPage in the region by default
+                    await _navigationService.CreateBuilder()
+                        .AddSegment("MainView")
+                        .AddSegment("ChatListPage")
+                        .NavigateAsync();
+                }
                 else
+                {
                     await _navigationService.NavigateAsync("LoginPage");
+                }
             }
             catch (Exception ex) 
             {
                 await _popupService.ShowError(ex.Message);
-                throw;
+                // In splash we might not want to rethrow if we handled it with a popup, 
+                // but usually splash failures are critical.
             }
         }
     }
