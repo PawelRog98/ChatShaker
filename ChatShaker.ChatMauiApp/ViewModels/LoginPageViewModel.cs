@@ -55,7 +55,7 @@ namespace ChatShaker.ChatMauiApp.ViewModels
             _authService = authService;
             _navigationService = navigationService;
             _popupService = popupService;
-            _cryptoService = _cryptoService;
+            _cryptoService = cryptoService;
 
             LoginCommand = new DelegateCommand(async () => await  Login());
             MoveToRegisterCommand = new DelegateCommand(async () => await MoveToRegister());

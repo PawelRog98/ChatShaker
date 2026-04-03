@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Prism.Commands;
+using Prism.Navigation;
+using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class RecievedInvitationViewModel : BaseViewModel, INavigationAware
+public class RecievedInvitationViewModel : BaseViewModel, INavigationAware, IRegionAware
 {
     private readonly IFriendshipApiService _friendshipApiService;
     private readonly IAppPopupService _popupService;
@@ -27,14 +30,26 @@ public class RecievedInvitationViewModel : BaseViewModel, INavigationAware
     {
         if (invitation == null) return;
 
-        var response = await _friendshipApiService.RespondToInvitation(invitation.PublicId, accept);
-        if (response.Success)
+        IsBusy = true;
+        try
         {
-            RecievedInvitations.Remove(invitation);
+            var response = await _friendshipApiService.RespondToInvitation(invitation.PublicId, accept);
+            if (response.Success)
+            {
+                RecievedInvitations.Remove(invitation);
+            }
+            else
+            {
+                await _popupService.ShowError(response.Message);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await _popupService.ShowError(response.Message);
+            await _popupService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
@@ -57,6 +72,10 @@ public class RecievedInvitationViewModel : BaseViewModel, INavigationAware
                 RecievedInvitations.Add(invitation);
             }
         }
+        catch(Exception ex)
+        {
+            await _popupService.ShowError(ex.Message);
+        }
         finally
         {
             IsBusy = false;
@@ -68,6 +87,17 @@ public class RecievedInvitationViewModel : BaseViewModel, INavigationAware
     }
 
     public async void OnNavigatedTo(INavigationParameters parameters)
+    {
+        await LoadRecievedInvitations();
+    }
+
+    public bool IsNavigationTarget(NavigationContext navigationContext) => true;
+
+    public void OnNavigatedFrom(NavigationContext navigationContext)
+    {
+    }
+
+    public async void OnNavigatedTo(NavigationContext navigationContext)
     {
         await LoadRecievedInvitations();
     }

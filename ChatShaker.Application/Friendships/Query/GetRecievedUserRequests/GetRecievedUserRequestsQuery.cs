@@ -14,21 +14,21 @@ public class GetRecievedUserRequestsQuery : IRequest<List<UserRequestsDto>>
     public long UserId { get; set; }
 }
 
-public class GetRevievedUserRequestsQueryHandler : IRequestHandler<GetRecievedUserRequestsQuery, List<UserRequestsDto>>
+public class GetRecievedUserRequestsQueryHandler : IRequestHandler<GetRecievedUserRequestsQuery, List<UserRequestsDto>>
 {
     private readonly IFriendRequestRepository _friendRequestRepository;
     private readonly IMapper _mapper;
-    
-    public GetRevievedUserRequestsQueryHandler(IFriendRequestRepository friendRequestRepository, IMapper mapper)
+
+    public GetRecievedUserRequestsQueryHandler(IFriendRequestRepository friendRequestRepository, IMapper mapper)
     {
         _friendRequestRepository = friendRequestRepository;
         _mapper = mapper;
     }
-    
+
     public async Task<List<UserRequestsDto>> Handle(GetRecievedUserRequestsQuery request, CancellationToken cancellationToken)
     {
         var data = await _friendRequestRepository.GetRecievedFriendRequests(request.UserId, cancellationToken);
-        
+
         var requests = _mapper.Map<List<UserRequestsDto>>(data);
         return requests;
     }

@@ -17,5 +17,20 @@ namespace ChatShaker.ChatMauiApp.Services
 
             await Application.Current.MainPage.ShowPopupAsync(popup);
         }
+
+        public async Task ShowSuccess(string message)
+        {
+            var popup = new SuccessPopupPage(message);
+
+            await Application.Current.MainPage.ShowPopupAsync(popup);
+        }
+
+        public async Task<Popup> ShowLoading(string message)
+        {
+            var popup = new LoadingPopupPage(message);
+
+            _ = Application.Current.MainPage.ShowPopupAsync(popup);
+            return popup;
+        }
     }
 }

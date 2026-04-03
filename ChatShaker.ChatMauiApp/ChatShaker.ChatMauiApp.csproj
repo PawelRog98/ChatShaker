@@ -70,10 +70,10 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
-		<PackageReference Include="NSec.Cryptography" Version="25.4.0" />
 		<PackageReference Include="Prism.DryIoc.Maui" Version="9.0.537" />
 		<PackageReference Include="Prism.Maui" Version="9.0.537" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
+		<PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -81,6 +81,12 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\Modals\ErrorPopupPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Modals\SuccessPopupPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Modals\LoadingPopupPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\RegisterPage.xaml">

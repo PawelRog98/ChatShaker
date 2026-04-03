@@ -13,7 +13,7 @@
     <Grid RowDefinitions="*,Auto">
 
         <CollectionView 
-            Grid.Row="1"
+            Grid.Row="0"
             ItemsSource="{Binding Messages}"
             VerticalOptions="Fill"
             RemainingItemsThreshold="3"
@@ -44,7 +44,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
             <Entry 
                 Text="{Binding OngoingText}" 
                 Placeholder="Write your message..." />

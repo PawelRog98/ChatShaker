@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Prism.Commands;
+using Prism.Navigation;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
@@ -33,28 +35,60 @@ public class SendInvitationViewModel : BaseViewModel, INavigationAware
 
     private async void SendInvitation()
     {
-        if(string.IsNullOrWhiteSpace(OngoingText))
+        if (string.IsNullOrWhiteSpace(OngoingText))
             return;
-        
-        await _friendshipApiService.SendInvitation(_ongoingText);
+
+        IsBusy = true;
+        try
+        {
+            var response = await _friendshipApiService.SendInvitation(_ongoingText);
+            if (response.Success)
+            {
+                OngoingText = string.Empty;
+                await LoadSentInvitations();
+            }
+            else
+            {
+                await _popupService.ShowError(response.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task LoadSentInvitations()
     {
-        var response = await _friendshipApiService.GetSentInvitations();
-
-        if (!response.Success)
+        IsBusy = true;
+        try
         {
-            await _popupService.ShowError(response.Message);
-            return;
+            var response = await _friendshipApiService.GetSentInvitations();
+
+            if (!response.Success)
+            {
+                await _popupService.ShowError(response.Message);
+                return;
+            }
+
+            var list = response.Data;
+            SentInvitations.Clear();
+
+            foreach (var invitation in list)
+                SentInvitations.Add(invitation);
         }
-        
-        var list = response.Data;
-        SentInvitations.Clear();
-        
-        foreach (var invitation in list)
-            SentInvitations.Add(invitation);
-            
+        catch (Exception ex)
+        {
+            await _popupService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     public void OnNavigatedFrom(INavigationParameters parameters)

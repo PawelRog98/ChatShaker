@@ -1,15 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.Views;
 
-public partial class RecievedInvitationPage : ContentPage
+public partial class RecievedInvitationPage : ContentView, IRegionMemberLifetime
 {
     public RecievedInvitationPage()
     {
         InitializeComponent();
     }
+
+    public bool KeepAlive => false;
 }

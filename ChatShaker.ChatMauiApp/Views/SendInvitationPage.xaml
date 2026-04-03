@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             xmlns:dto="clr-namespace:ChatShaker.ChatMauiApp.Models.Dto"
              x:DataType="viewModels:SendInvitationViewModel"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
              x:Class="ChatShaker.ChatMauiApp.Views.SendInvitationPage">
+    <ContentView.Content>
     <VerticalStackLayout Padding="16" Spacing="16">
         <Label Text="Send invitation" 
                FontSize="20"
@@ -17,9 +20,9 @@
         
         <CollectionView ItemsSource="{Binding SentInvitations}">
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="dto:InvitationDto">
                     <Grid Padding="10" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
-                        <Label Text="{Binding UserName}"
+                        <Label Text="{Binding RecipientUsername}"
                                VerticalOptions="Center"
                                Grid.Column="0"
                                Grid.Row="0"/>
@@ -40,4 +43,5 @@
             
         </CollectionView>
     </VerticalStackLayout>
-</ContentPage>
+    </ContentView.Content>
+</ContentView>

@@ -5,6 +5,7 @@
              xmlns:prism="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
              x:DataType="viewModels:MainPageViewModel"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
              x:Class="ChatShaker.ChatMauiApp.Views.MainView">
     <Grid RowDefinitions="Auto,*">
         <ScrollView Orientation="Horizontal" Grid.Row="0" BackgroundColor="Aquamarine">
@@ -20,6 +21,9 @@
                 <Button Text="Recieved Invitations"
                         Command="{Binding NavigateRegionCommand}"
                         CommandParameter="RecievedInvitationPage"/>
+                
+                <Button Text="Logout"
+                        Command="{Binding LogoutCommand}"/>
             </HorizontalStackLayout>
         </ScrollView>
         

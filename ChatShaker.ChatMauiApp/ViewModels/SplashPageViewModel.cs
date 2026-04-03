@@ -27,11 +27,7 @@ namespace ChatShaker.ChatMauiApp.ViewModels
 
                 if (token != null)
                 {
-                    // Navigate to MainView and load ChatListPage in the region by default
-                    await _navigationService.CreateBuilder()
-                        .AddSegment("MainView")
-                        .AddSegment("ChatListPage")
-                        .NavigateAsync();
+                    await _navigationService.NavigateAsync("MainView");
                 }
                 else
                 {
@@ -41,8 +37,6 @@ namespace ChatShaker.ChatMauiApp.ViewModels
             catch (Exception ex) 
             {
                 await _popupService.ShowError(ex.Message);
-                // In splash we might not want to rethrow if we handled it with a popup, 
-                // but usually splash failures are critical.
             }
         }
     }

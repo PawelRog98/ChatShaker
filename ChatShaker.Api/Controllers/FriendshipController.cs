@@ -55,7 +55,7 @@ public class FriendshipController : ControllerBase
     }
 
     [HttpGet("get-recieved")]
-    [ProducesResponseType(typeof(Response<UserRequestsDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<List<UserRequestsDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetRecievedUserRequests(CancellationToken  cancellationToken)
     {
@@ -70,7 +70,7 @@ public class FriendshipController : ControllerBase
     }
 
     [HttpGet("get-sent")]
-    [ProducesResponseType(typeof(Response<UserRequestsDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<List<UserRequestsDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetSentUserRequests(CancellationToken cancellationToken)
     {

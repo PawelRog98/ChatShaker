@@ -2,9 +2,9 @@ using CommunityToolkit.Maui.Views;
 
 namespace ChatShaker.ChatMauiApp.Views.Modals;
 
-public partial class ErrorPopupPage : Popup
+public partial class SuccessPopupPage : Popup
 {
-	public ErrorPopupPage(string message)
+	public SuccessPopupPage(string message)
 	{
 		InitializeComponent();
         Message.Text = message;

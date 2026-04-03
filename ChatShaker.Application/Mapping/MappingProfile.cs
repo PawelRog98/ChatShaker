@@ -63,8 +63,9 @@ namespace ChatShaker.Application.Mapping
         private void FriendRequestsMappings()
         {
             CreateMap<FriendRequest, UserRequestsDto>()
-                .ForMember(d => d.Username,o => o.MapFrom(s => s.Sender == null ? s.Recipient.FirstName : s.Sender.FirstName))
-                .ForMember(d=>d.SentAtUtc, o=> o.MapFrom(s=>s.CreatedAtUtc));
+                .ForMember(d => d.SenderUsername, o => o.MapFrom(s => s.Sender.FirstName))
+                .ForMember(d => d.RecipientUsername, o => o.MapFrom(s => s.Recipient.FirstName))
+                .ForMember(d => d.SentAtUtc, o => o.MapFrom(s => s.CreatedAtUtc));
         }
             
     }

@@ -58,7 +58,8 @@ namespace ChatShaker.Infrastructure.Authentication
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken.TokenData,
-                UserNick = user.PublicNick
+                UserNick = user.PublicNick,
+                UserId = user.PublicId.ToString()
             };
         }
 

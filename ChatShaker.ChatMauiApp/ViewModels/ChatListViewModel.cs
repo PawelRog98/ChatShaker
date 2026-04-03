@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Prism.Commands;
+using Prism.Navigation;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 

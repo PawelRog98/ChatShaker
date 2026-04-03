@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
-using NSec.Cryptography;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 
 namespace ChatShaker.ChatMauiApp.Services;
 
@@ -59,18 +61,18 @@ public class CryptoService : ICryptoService
 
     public Task<string> EncryptRoomKey(byte[] roomKey, byte[] recipientPublicKeyBytes)
     {
-        var alg = KeyAgreementAlgorithm.X25519;
-
-        using var ephKey = new Key(KeyAgreementAlgorithm.X25519,
-            new KeyCreationParameters
-            {
-                ExportPolicy = KeyExportPolicies.None
-            });
-
-        var recipientKey = PublicKey.Import(alg, recipientPublicKeyBytes, KeyBlobFormat.RawPublicKey);
-
-        using var secret = alg.Agree(ephKey, recipientKey);
-
+        var generator = new X25519KeyPairGenerator();
+        generator.Init(new X25519KeyGenerationParameters(new SecureRandom()));
+        var ephKeyPair = generator.GenerateKeyPair();
+        
+        var ephPrivateKey = (X25519PrivateKeyParameters)ephKeyPair.Private;
+        var ephPublicKey = (X25519PublicKeyParameters)ephKeyPair.Public;
+        
+        var recipientPublicKey = new X25519PublicKeyParameters(recipientPublicKeyBytes, 0);
+        
+        byte[] secret = new byte[32];
+        ephPrivateKey.GenerateSecret(recipientPublicKey, secret, 0);
+        
         var kek = HkdfDeriveKey(secret, null, "Chatshaker v1", 32);
 
         var nonce = RandomNumberGenerator.GetBytes(12);
@@ -80,13 +82,13 @@ public class CryptoService : ICryptoService
         using var aes = new AesGcm(kek);
         aes.Encrypt(nonce, roomKey, cipher, tag);
 
-        var ephPublicKey = ephKey.PublicKey.Export(KeyBlobFormat.RawPublicKey);
+        var ephPublicKeyBytes = ephPublicKey.GetEncoded();
 
-        var result = new byte[nonce.Length + cipher.Length + tag.Length + ephPublicKey.Length];
+        var result = new byte[nonce.Length + cipher.Length + tag.Length + ephPublicKeyBytes.Length];
         Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
         Buffer.BlockCopy(cipher, 0, result, nonce.Length, cipher.Length);
         Buffer.BlockCopy(tag, 0, result, nonce.Length + cipher.Length, tag.Length);
-        Buffer.BlockCopy(ephPublicKey, 0, result, nonce.Length + cipher.Length + tag.Length, ephPublicKey.Length);
+        Buffer.BlockCopy(ephPublicKeyBytes, 0, result, nonce.Length + cipher.Length + tag.Length, ephPublicKeyBytes.Length);
 
         return Task.FromResult(Convert.ToBase64String(result));
     }
@@ -98,15 +100,13 @@ public class CryptoService : ICryptoService
         var nonce = combined[..12];
         var cipher = combined[12..^48];
         var tag = combined[^48..^32];
-        var ephPublicKey = combined[^32..];
+        var ephPublicKeyBytes = combined[^32..];
 
-        var alg = KeyAgreementAlgorithm.X25519;
+        var recipientPrivateKey = new X25519PrivateKeyParameters(recipientPrivateKeyBytes, 0);
+        var ephSenderPublicKey = new X25519PublicKeyParameters(ephPublicKeyBytes, 0);
 
-        var ephSenderKey = PublicKey.Import(alg, ephPublicKey, KeyBlobFormat.RawPublicKey);
-
-        using var recipientKey = Key.Import(alg, recipientPrivateKeyBytes, KeyBlobFormat.RawPrivateKey);
-
-        using var secret = alg.Agree(recipientKey, ephSenderKey);
+        byte[] secret = new byte[32];
+        recipientPrivateKey.GenerateSecret(ephSenderPublicKey, secret, 0);
 
         var kek = HkdfDeriveKey(secret, null, "Chatshaker v1", 32);
 
@@ -124,14 +124,12 @@ public class CryptoService : ICryptoService
         if (existingKey != null)
             return;
 
-        using var key = new Key(KeyAgreementAlgorithm.X25519,
-            new KeyCreationParameters
-            {
-                ExportPolicy = KeyExportPolicies.AllowPlaintextExport
-            });
+        var generator = new X25519KeyPairGenerator();
+        generator.Init(new X25519KeyGenerationParameters(new SecureRandom()));
+        var keyPair = generator.GenerateKeyPair();
 
-        var privateKey = key.Export(KeyBlobFormat.RawPrivateKey);
-        var publicKey = key.PublicKey.Export(KeyBlobFormat.RawPublicKey);
+        var privateKey = ((X25519PrivateKeyParameters)keyPair.Private).GetEncoded();
+        var publicKey = ((X25519PublicKeyParameters)keyPair.Public).GetEncoded();
 
         await SecureStorage.SetAsync(PrivateIdentityKeyKey, Convert.ToBase64String(privateKey));
         await SecureStorage.SetAsync(PublicIdentityKeyKey, Convert.ToBase64String(publicKey));
@@ -141,14 +139,13 @@ public class CryptoService : ICryptoService
             DeviceId = $"{DeviceInfo.Current.VersionString}@{DeviceInfo.Current.Model}"
         };
         await _keyApiService.UploadIdentity(newUserKeyData);
-        //UploadPublicKey(userId, publicKey);
     }
 
-    private static byte[] HkdfDeriveKey(SharedSecret secret, byte[]? salt, string info, int length)
+    private static byte[] HkdfDeriveKey(byte[] secret, byte[]? salt, string info, int length)
     {
         salt ??= Encoding.UTF8.GetBytes("ChatShaker-v1-salt");
         var infoBytes = Encoding.UTF8.GetBytes(info);
 
-        return KeyDerivationAlgorithm.HkdfSha256.DeriveBytes(secret, salt, infoBytes, length);
+        return HKDF.DeriveKey(HashAlgorithmName.SHA256, secret, length, salt, infoBytes);
     }
 }
