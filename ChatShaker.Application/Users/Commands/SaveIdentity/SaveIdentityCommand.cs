@@ -47,7 +47,7 @@ public class SaveIdentityCommandHandler : IRequestHandler<SaveIdentityCommand, U
             
             return Unit.Value;
         }
-        catch 
+        catch (Exception ex)
         {
             await _unitOfWork.Rollback(cancellationToken);
             throw;

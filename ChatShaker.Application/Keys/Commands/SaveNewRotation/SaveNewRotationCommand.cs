@@ -32,6 +32,7 @@ public class SaveNewRotationCommandHandler : IRequestHandler<SaveNewRotationComm
     {  
         _chatRoomKeyBlobRepository = chatRoomKeyBlobRepository;
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -58,7 +59,7 @@ public class SaveNewRotationCommandHandler : IRequestHandler<SaveNewRotationComm
                 });
             }
             
-            _chatRoomKeyBlobRepository.SaveNewRotation(newKeys, cancellationToken);
+            await _chatRoomKeyBlobRepository.SaveNewRotation(newKeys, cancellationToken);
             await _unitOfWork.Commit(cancellationToken);
             
             return Unit.Value;

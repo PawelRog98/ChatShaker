@@ -70,7 +70,8 @@ public class RoomKeyService : IRoomKeyService
             {
                 UserId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
-                Version = 1
+                Version = 1,
+                DeviceId = user.DeviceId
             };
             
             publicKeys.Add(dataToSave);

@@ -7,7 +7,7 @@ public class ChatRoomKeyBlobConfiguration : IEntityTypeConfiguration<ChatRoomKey
 {
     public void Configure(EntityTypeBuilder<ChatRoomKeyBlob> builder)
     {
-        builder.HasKey(x=> new {x.ChatRoomId, x.UserId});
+        builder.HasKey(x=> new {x.ChatRoomId, x.UserId, x.DeviceId});
         
         builder.HasOne(x => x.ChatRoom)
             .WithMany(x => x.ChatRoomKeyBlobs)

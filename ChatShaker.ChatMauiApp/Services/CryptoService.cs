@@ -120,6 +120,8 @@ public class CryptoService : ICryptoService
 
     public async Task SaveIdentityKey(string userId)
     {
+        SecureStorage.Remove(PrivateIdentityKeyKey);
+        
         var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey);
         if (existingKey != null)
             return;

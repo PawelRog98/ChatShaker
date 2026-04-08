@@ -26,14 +26,16 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
     private readonly IChatRoomKeyBlobRepository _chatRoomKeyBlobRepository;
     private readonly IChatRoomMembershipRepository _chatRoomMembershipRepository;
     private readonly IChatRoomRepository _chatRoomRepository;
+    private readonly IUserPublicKeyRepository _userPublicKeyRepository;
     private readonly IUnitOfWork _unitOfWork;
-    
+
     public AcceptInvitationCommandHandler(IFriendshipRepository friendshipRepository, 
         IFriendRequestRepository friendRequestRepository, 
         IUserRepository userRepository, 
         IChatRoomKeyBlobRepository chatRoomKeyBlobRepository,
         IChatRoomMembershipRepository chatRoomMembershipRepository,
         IChatRoomRepository chatRoomRepository,
+        IUserPublicKeyRepository userPublicKeyRepository,
         IUnitOfWork unitOfWork)
     {
         _friendshipRepository  = friendshipRepository;
@@ -42,9 +44,9 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         _chatRoomKeyBlobRepository = chatRoomKeyBlobRepository;
         _chatRoomMembershipRepository = chatRoomMembershipRepository;
         _chatRoomRepository = chatRoomRepository;
+        _userPublicKeyRepository = userPublicKeyRepository;
         _unitOfWork = unitOfWork;
-    }
-    public async Task<Unit> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
+    }    public async Task<Unit> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -63,6 +65,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             if (!request.AcceptanceDecisionDto.IsAccepted)
             {
                 friendRequest.Status = FriendRequestStatus.Declined;
+                await _unitOfWork.Commit(cancellationToken);
                 
                 return Unit.Value;
             }
@@ -96,7 +99,8 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
 
             var chatRoomMemberships = new List<ChatRoomMembership>();
             var chatRoomKeyBlobs = new List<ChatRoomKeyBlob>();
-            chatRoomMemberships.AddRange(
+            chatRoomMemberships.AddRange(new List<ChatRoomMembership>
+            {
                 new ChatRoomMembership
                 {
                     ChatRoom = chatRoom,
@@ -108,23 +112,51 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
                     ChatRoom = chatRoom,
                     UserId = friendRequest.RecipientId,
                     AddedById = friendRequest.SenderId
-                });
+                }
+            });
 
-            chatRoomKeyBlobs.AddRange(
-                new ChatRoomKeyBlob
+            var userPublicKeys = await _userPublicKeyRepository.GetUserIdentities(
+                new List<Guid> { sender.PublicId, recipient.PublicId }, cancellationToken);
+
+            if (userPublicKeys.Any())
+            {
+                foreach (var pubKey in userPublicKeys)
                 {
-                    ChatRoom = chatRoom,
-                    UserId = friendRequest.SenderId,
-                    CreatedAtUtc = DateTime.UtcNow,
-                    EncryptedRoomKey = "Placeholder"
-                },
-                new ChatRoomKeyBlob
+                    chatRoomKeyBlobs.Add(new ChatRoomKeyBlob
+                    {
+                        ChatRoom = chatRoom,
+                        UserId = pubKey.UserId,
+                        CreatedAtUtc = DateTime.UtcNow,
+                        EncryptedRoomKey = "Placeholder",
+                        Version = 0,
+                        DeviceId = pubKey.DeviceId
+                    });
+                }
+            }
+            else
+            {
+                chatRoomKeyBlobs.AddRange(new List<ChatRoomKeyBlob>
                 {
-                    ChatRoom = chatRoom,
-                    UserId = friendRequest.RecipientId,
-                    CreatedAtUtc = DateTime.UtcNow,
-                    EncryptedRoomKey = "Placeholder"
+                    new ChatRoomKeyBlob
+                    {
+                        ChatRoom = chatRoom,
+                        UserId = friendRequest.SenderId,
+                        CreatedAtUtc = DateTime.UtcNow,
+                        EncryptedRoomKey = "Placeholder",
+                        Version = 0,
+                        DeviceId = "placeholder"
+                    },
+                    new ChatRoomKeyBlob
+                    {
+                        ChatRoom = chatRoom,
+                        UserId = friendRequest.RecipientId,
+                        CreatedAtUtc = DateTime.UtcNow,
+                        EncryptedRoomKey = "Placeholder",
+                        Version = 0,
+                        DeviceId = "placeholder"
+                    }
                 });
+            }
 
             foreach (var userMemberships in chatRoomMemberships)
                 await _chatRoomMembershipRepository.Add(userMemberships, cancellationToken);

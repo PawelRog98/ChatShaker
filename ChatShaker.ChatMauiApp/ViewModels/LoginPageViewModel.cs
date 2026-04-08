@@ -86,10 +86,7 @@ namespace ChatShaker.ChatMauiApp.ViewModels
                 if (result.Success)
                 {
                     await _cryptoService.SaveIdentityKey(result.Data.UserId);
-                    await _navigationService.CreateBuilder()
-                        .AddSegment("MainView")
-                        .AddSegment("ChatListPage")
-                        .NavigateAsync();
+                    await _navigationService.NavigateAsync("/MainView");
                 }
             }
             catch (Exception ex)
