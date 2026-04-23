@@ -21,15 +21,10 @@ public class UserApiService : IUserApiService
 
     public async Task<Response<List<UserKeyDataDto>>> GetParticipants(List<Guid> userIds)
     {
-        var queryParams = new Dictionary<string, string>();
-        for (int i = 0; i < userIds.Count; i++)
-        {
-            queryParams.Add($"userId{i}", userIds[i].ToString());
-        }
-        
-        string uri = QueryHelpers.AddQueryString("api/users/get-public-identities",  queryParams);
+        var queryParams = userIds.Select(id => new KeyValuePair<string?, string?>("userIds", id.ToString()));
+
+        string uri = QueryHelpers.AddQueryString("api/keys/get-public-identities",  queryParams);
         var response = await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>(uri);
-        
+
         return response;
-    }
-}
+    }}

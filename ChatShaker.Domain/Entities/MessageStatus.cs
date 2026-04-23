@@ -6,6 +6,8 @@ public class MessageStatus
 {
     public long MessageId { get; set; }
     public Message Message { get; set; }
+    public long UserId { get; set; }
+    public User User { get; set; }
     public MessageStatusEnum Status { get; set; }
     public DateTime UpdateAtUtc { get; set; }
 

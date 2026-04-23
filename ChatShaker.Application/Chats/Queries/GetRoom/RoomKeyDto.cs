@@ -1,6 +1,6 @@
-namespace ChatShaker.ChatMauiApp.Models.Dto;
+namespace ChatShaker.Application.Chats.Queries.GetRoom;
 
-public class RoomKeyDataDto
+public class RoomKeyDto
 {
     public Guid UserPublicId { get; set; }
     public string EncryptedRoomKey {get; set;}

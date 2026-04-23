@@ -16,6 +16,6 @@ public class Message : ICommonData
     public string Nonce { get; set; }
     public DateTime SentAtUtc { get; set; }
     public Guid ClientMessageId { get; set; }
-    public MessageStatus MessageStatus { get; set; }
+    public virtual ICollection<MessageStatus> MessageStatuses { get; set; } = new List<MessageStatus>();
 
 }

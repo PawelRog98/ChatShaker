@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using ChatShaker.Api.Clients;
 using ChatShaker.Application.Chats.Commands.JoinRoom;
+using ChatShaker.Application.MessagesManagment.Commands.MarkMessageAsDelivered;
+using ChatShaker.Application.MessagesManagment.Commands.MarkMessageAsRead;
 using ChatShaker.Application.MessagesManagment.Commands.SendMessage;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -12,19 +14,65 @@ namespace ChatShaker.Api.Hubs;
 public class ChatHub : Hub<IChatClient>
 {
     private readonly IMediator _mediator;
-    public ChatHub(IMediator mediator)
+    private readonly ILogger<ChatHub> _logger;
+    public ChatHub(IMediator mediator, ILogger<ChatHub> logger)
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     public async Task SendMessage(SendMessageDto sendMessageDto)
     {
-        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new HubException("Unauthorized");
+        try
+        {
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new HubException("Unauthorized");
 
-        var cancellationToken = Context.ConnectionAborted;
-        
-        await _mediator.Send(new SendMessageCommand(sendMessageDto, long.Parse(userId)), cancellationToken);
+            var cancellationToken = Context.ConnectionAborted;
+            
+            await _mediator.Send(new SendMessageCommand(sendMessageDto, long.Parse(userId)), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in SendMessage: {Message}", ex.Message);
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task MarkAsRead(Guid messagePublicId)
+    {
+        try
+        {
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+                         ?? throw new HubException("Unauthorized");
+
+            var cancellationToken = Context.ConnectionAborted;
+
+            await _mediator.Send(new MarkMessageAsReadCommand(messagePublicId, long.Parse(userId)), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in MarkAsRead: {Message}", ex.Message);
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task MarkAsDelivered(Guid messagePublicId)
+    {
+        try
+        {
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+                         ?? throw new HubException("Unauthorized");
+
+            var cancellationToken = Context.ConnectionAborted;
+
+            await _mediator.Send(new MarkMessageAsDeliveredCommand(messagePublicId, long.Parse(userId)), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in MarkAsDelivered: {Message}", ex.Message);
+            throw new HubException(ex.Message);
+        }
     }
 
     public async Task JoinRoom(Guid roomPublicId)

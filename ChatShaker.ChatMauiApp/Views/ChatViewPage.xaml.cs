@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChatShaker.ChatMauiApp.Views;
 
-public partial class ChatViewPage : ContentPage
+public partial class ChatViewPage : ContentView
 {
     public ChatViewPage()
     {

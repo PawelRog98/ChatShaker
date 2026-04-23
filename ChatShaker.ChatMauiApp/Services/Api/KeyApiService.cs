@@ -23,11 +23,7 @@ public class KeyApiService : IKeyApiService
 
     public async Task<Response<List<UserKeyDataDto>>> GetPublicIdentities(List<Guid> userIds)
     {
-        var queryParams = new Dictionary<string, string>();
-        for (int i = 0; i < userIds.Count; i++)
-        {
-            queryParams.Add($"userId{i}", userIds[i].ToString());
-        }
+        var queryParams = userIds.Select(id => new KeyValuePair<string?, string?>("userIds", id.ToString()));
         
         string uri = QueryHelpers.AddQueryString("api/keys/get-public-identities",  queryParams);
         var response = await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>(uri);
@@ -35,9 +31,10 @@ public class KeyApiService : IKeyApiService
         return response;
     }
 
-    public async Task<Response<string>> GetRoomKey(Guid roomPublicId, long version)
+    public async Task<Response<string>> GetRoomKey(RoomKeyRequestInfoDto  requestInfo)
     {
-        return await _httpClient.GetFromJsonAsync<Response<string>> ($"api/keys/get-room-key/{roomPublicId}/{version}");
+        var response = await _httpClient.PostAsJsonAsync("api/keys/get-room-key", requestInfo);
+        return await response.Content.ReadFromJsonAsync<Response<string>>();
     }
 
     public async Task<Response<object>> SaveRoomKey(RoomDto roomKeys)
@@ -48,7 +45,7 @@ public class KeyApiService : IKeyApiService
 
     public async Task<Response<object>> InitializeRoom(RoomDto room)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/keys/initialize-room-key", room);
+        var response = await _httpClient.PutAsJsonAsync("api/keys/initialize-room-key", room);
         return await response.Content.ReadFromJsonAsync<Response<object>>();
     }
     

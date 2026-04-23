@@ -9,8 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChatShaker.Application.Chats.Queries.GetRoom;
 using ChatShaker.Application.Chats.Queries.GetUserRooms;
 using ChatShaker.Application.Friendships.Query;
+using ChatShaker.Application.Keys.Commands.InitializeNewDirectChat;
+using ChatShaker.Application.MessagesManagment.Commands.SendMessage;
 using ChatShaker.Application.Users.Commands.SaveIdentity;
 using ChatShaker.Application.Users.Queries.GetFriends;
 
@@ -52,12 +55,24 @@ namespace ChatShaker.Application.Mapping
             CreateMap<ChatRoom, ChatListItemDto>()
                 .ForMember(d => d.RoomPublicId, o => o.MapFrom(s => s.PublicId))
                 .ForMember(d => d.Name, o => o.MapFrom(s => s.Name));
+
+            CreateMap<ChatRoom, RoomDto>()
+                .ForMember(d => d.ChatRoomPublicId, o => o.MapFrom(s => s.PublicId))
+                .ForMember(d => d.CreateDateUtc, o => o.MapFrom(s => s.CreatedAtUtc))
+                .ForMember(d => d.ChatRoomKeyBlobDtos, o => o.MapFrom(s => s.ChatRoomKeyBlobs));
+
+            CreateMap<Message, MessageDto>()
+                .ForMember(d => d.SenderName, o => o.MapFrom(s => s.Sender.FirstName))
+                .ForMember(d => d.SenderPublicId, o => o.MapFrom(s => s.Sender.PublicId));
         }
 
         private void KeysMappings()
         {
             CreateMap<UserPublicKey, UserKeyDataDto>()
                 .ForMember(d => d.PublicUserId, o => o.MapFrom(s => s.User.PublicId));
+            
+            CreateMap<ChatRoomKeyBlob, RoomKeyDto>()
+                .ForMember(d => d.UserPublicId, o => o.MapFrom(s => s.User.PublicId));
         }
 
         private void FriendRequestsMappings()

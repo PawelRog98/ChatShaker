@@ -63,11 +63,11 @@ public class KeysController :  ControllerBase
         return ApiResponse.Ok(result);
     }
 
-    [HttpGet("get-room-key")]
+    [HttpPost("get-room-key")]
     [ProducesResponseType(typeof(Response<List<UserKeyDataDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetRoomKey([FromBody] RoomKeyReqestDto roomKeyReqestDto,
+    public async Task<IActionResult> GetRoomKey([FromBody] RoomKeyRequestDto roomKeyRequestDto,
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -75,7 +75,7 @@ public class KeysController :  ControllerBase
         if(string.IsNullOrWhiteSpace(userId))
             return ApiResponse.Forbidden("User not found");
 
-        var result = await _mediator.Send(new GetRoomKeyQuery(long.Parse(userId), roomKeyReqestDto), cancellationToken);
+        var result = await _mediator.Send(new GetRoomKeyQuery(long.Parse(userId), roomKeyRequestDto), cancellationToken);
         
         return ApiResponse.Ok(result, "Personal room key");
     }

@@ -60,7 +60,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
 
         var messageStatus = new MessageStatus
         {
-            MessageId = message.Id,
+            Message = message,
+            UserId = request.UserId,
             Status = Domain.Enums.MessageStatusEnum.Sent,
             UpdateAtUtc = DateTime.UtcNow
         };
@@ -68,12 +69,20 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
         await _messageRepository.SaveStatus(messageStatus, cancellationToken);
         await _unitOfWork.Commit(cancellationToken);
 
+        var sender = await _userRepository.GetUserById(request.UserId, cancellationToken);
+        if (sender == null)
+            throw new BadAuthenticationException("User not found");
+
         var messageDto = new MessageDto
         {
             PublicId = message.PublicId,
+            SenderPublicId = sender.PublicId,
+            SenderName = sender.FirstName,
             CipherText = message.CipherText,
             Nonce = message.Nonce,
-            SentAtUtc = message.SentAtUtc
+            SentAtUtc = message.SentAtUtc,
+            ClientMessageId = message.ClientMessageId,
+            Status = Domain.Enums.MessageStatusEnum.Sent
         };
 
         await _chatNotifier.MessageSent(room.PublicId, messageDto, cancellationToken);

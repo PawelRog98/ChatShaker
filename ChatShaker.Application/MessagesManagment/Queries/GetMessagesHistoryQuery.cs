@@ -8,14 +8,16 @@ namespace ChatShaker.Application.MessagesManagment.Queries;
 
 public class GetMessagesHistoryQuery : IRequest<IEnumerable<MessageDto>>
 {
-    public GetMessagesHistoryQuery(Guid roomPublicId, int pageIndex, int pageSize)
+    public GetMessagesHistoryQuery(Guid roomPublicId, long userId, int pageIndex, int pageSize)
     {
         RoomPublicId = roomPublicId;
+        UserId = userId;
         PageIndex = pageIndex;
         PageSize = pageSize;
     }
     
     public Guid RoomPublicId { get; set; }
+    public long UserId { get; set; }
     public int PageSize { get; set; }
     public int PageIndex { get; set; }
 }
@@ -41,7 +43,32 @@ public class GetMessagesHistoryQueryHandler : IRequestHandler<GetMessagesHistory
         var messages =
             await _messageRepository.GetByRoom(room.Id, request.PageIndex, request.PageSize, cancellationToken);
         
-        var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messages);
+        var messagesDto = _mapper.Map<IEnumerable<MessageDto>>(messages).ToList();
+
+        foreach (var messageDto in messagesDto)
+        {
+            var message = messages.First(x => x.PublicId == messageDto.PublicId);
+            
+            if (message.SenderId == request.UserId)
+            {
+                // If I am the sender, I want to see if it was delivered/read by anyone else
+                messageDto.Status = message.MessageStatuses
+                    .Where(x => x.UserId != request.UserId)
+                    .Select(x => x.Status)
+                    .DefaultIfEmpty(Domain.Enums.MessageStatusEnum.Sent)
+                    .Max();
+            }
+            else
+            {
+                // If I am NOT the sender, I want to see MY status for this message
+                messageDto.Status = message.MessageStatuses
+                    .Where(x => x.UserId == request.UserId)
+                    .Select(x => x.Status)
+                    .DefaultIfEmpty(Domain.Enums.MessageStatusEnum.Sent)
+                    .FirstOrDefault();
+            }
+        }
+
         return messagesDto;
     }
 }

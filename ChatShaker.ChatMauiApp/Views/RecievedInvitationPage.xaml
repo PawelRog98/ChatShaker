@@ -10,50 +10,74 @@
              x:Class="ChatShaker.ChatMauiApp.Views.RecievedInvitationPage"
              x:Name="Page">
     <ContentView.Content>
-    <Grid RowDefinitions="Auto, *" Padding="16">
+    <Grid RowDefinitions="Auto, *" Padding="16" RowSpacing="16">
         <Label Grid.Row="0"
                 Text="Received Invitations"
-                FontSize="20"
+                FontSize="24"
                 FontAttributes="Bold"
-                Margin="0,0,0,16"/>
+                TextColor="{StaticResource Primary}"/>
 
         <CollectionView Grid.Row="1" 
                         ItemsSource="{Binding RecievedInvitations}">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="dtos:InvitationDto">
-                        <Grid Padding="10" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto">
-                            <Label Text="{Binding SenderUsername}"
-                                   VerticalOptions="Center"
-                                   Grid.Column="0"
-                                   Grid.Row="0"/>
-                            
-                            <Button Grid.Column="1" Grid.Row="0" 
-                                    Text="Accept" 
-                                    Command="{Binding BindingContext.AcceptCommand, Source={x:Reference Page}}"
-                                    CommandParameter="{Binding .}"
-                                    Margin="5,0"/>
-                            
-                            <Button Grid.Column="2" Grid.Row="0" 
-                                    Text="Reject" 
-                                    Command="{Binding BindingContext.RejectCommand, Source={x:Reference Page}}"
-                                    CommandParameter="{Binding .}"
-                                    BackgroundColor="Red"
-                                    Margin="5,0"/>
+                        <Border StrokeThickness="0" 
+                                BackgroundColor="White" 
+                                Padding="16"
+                                StrokeShape="RoundRectangle 12">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.05" />
+                            </Border.Shadow>
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="{Binding SenderUsername}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"
+                                       Grid.Column="0"
+                                       Grid.Row="0"/>
+                                
+                                <Button Grid.Column="1" Grid.Row="0" 
+                                        Text="Accept" 
+                                        CornerRadius="8"
+                                        BackgroundColor="{StaticResource Primary}"
+                                        TextColor="White"
+                                        FontSize="13"
+                                        Padding="15,0"
+                                        Command="{Binding BindingContext.AcceptCommand, Source={x:Reference Page}}"
+                                        CommandParameter="{Binding .}"/>
+                                
+                                <Button Grid.Column="2" Grid.Row="0" 
+                                        Text="Reject" 
+                                        CornerRadius="8"
+                                        BackgroundColor="#FADBD8"
+                                        TextColor="#C0392B"
+                                        FontSize="13"
+                                        Padding="15,0"
+                                        Command="{Binding BindingContext.RejectCommand, Source={x:Reference Page}}"
+                                        CommandParameter="{Binding .}"/>
 
-                            <Label Text="{Binding SentAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" 
-                                   Grid.Row="1"
-                                   Grid.Column="0"
-                                   Grid.ColumnSpan="3"
-                                   FontSize="12"
-                                   TextColor="Gray"/>
-                        </Grid>
+                                <Label Text="{Binding SentAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" 
+                                       Grid.Row="1"
+                                       Grid.Column="0"
+                                       Grid.ColumnSpan="3"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Gray500}"
+                                       Margin="0,8,0,0"/>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
                 <CollectionView.EmptyView>
-                    <Label Text="No invitations received yet." 
-                           HorizontalOptions="Center" 
-                           VerticalOptions="Center" 
-                           Margin="0,20,0,0"/>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                        <Label Text="📪" FontSize="50" HorizontalOptions="Center" />
+                        <Label Text="No invitations received yet." 
+                               FontSize="16"
+                               TextColor="{StaticResource Gray500}"
+                               HorizontalOptions="Center" />
+                    </StackLayout>
                 </CollectionView.EmptyView>
             </CollectionView>
         </Grid>

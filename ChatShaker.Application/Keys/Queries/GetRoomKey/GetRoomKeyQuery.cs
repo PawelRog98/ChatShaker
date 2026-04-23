@@ -6,14 +6,14 @@ namespace ChatShaker.Application.Keys.GetRoomKey;
 
 public class GetRoomKeyQuery : IRequest<string>
 {
-    public GetRoomKeyQuery(long userId, RoomKeyReqestDto roomKeyRequest)
+    public GetRoomKeyQuery(long userId, RoomKeyRequestDto roomKeyRequest)
     {
         UserId = userId;
         RoomKeyRequest = roomKeyRequest;
     }
     
     public long UserId  { get; set; }
-    public RoomKeyReqestDto RoomKeyRequest { get; set; }
+    public RoomKeyRequestDto RoomKeyRequest { get; set; }
 }
 
 public class GetRoomKeyQueryHandler : IRequestHandler<GetRoomKeyQuery, string>

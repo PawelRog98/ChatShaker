@@ -7,6 +7,6 @@ public class MessageStatusConfiguration : IEntityTypeConfiguration<MessageStatus
 {
     public void Configure(EntityTypeBuilder<MessageStatus> builder)
     {
-        builder.HasKey(x=>x.MessageId);
+        builder.HasKey(x => new { x.MessageId, x.UserId });
     }
 }

@@ -22,6 +22,13 @@ public class ChatNotifier : IChatNotifier
             .WaitAsync(cancellationToken);
     }
 
+    public async Task MessageDelivered(Guid roomPublicId, Guid messagePublicId, CancellationToken cancellationToken)
+    {
+        await _hubContext.Clients.Group(roomPublicId.ToString())
+            .MessageDelivered(messagePublicId)
+            .WaitAsync(cancellationToken);
+    }
+
     public async Task MessageRead(Guid roomPublicId, Guid messagePublicId, CancellationToken cancellationToken)
     {
         await _hubContext.Clients.Group(roomPublicId.ToString())

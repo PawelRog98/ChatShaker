@@ -21,10 +21,12 @@ public class ChatDataService : IChatDataService
         var items = await _messagesApiService.GetMessages(roomPublicId, pageIndex, pageSize);
         var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
 
-        foreach (var item in items.Data)
+        var decryptionTasks = items.Data.Select(async item =>
         {
             item.CipherText = await _cryptoService.DecryptMessage(roomKey, item.CipherText, item.Nonce);
-        }
+        });
+
+        await Task.WhenAll(decryptionTasks);
         
         return items.Data;
     }

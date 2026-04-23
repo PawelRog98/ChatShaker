@@ -8,4 +8,5 @@ public interface IMessageRepository
     Task<Message> Add(Message message, CancellationToken cancellationToken);
     Task SaveStatus(MessageStatus messageStatus, CancellationToken cancellationToken);
     Task<IEnumerable<Message>> GetLastMessageByRoom(long[] roomIds, CancellationToken cancellationToken);
+    Task<IEnumerable<Message>> GetByPublicId(Guid publicId, CancellationToken cancellationToken);
 }

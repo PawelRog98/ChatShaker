@@ -1,57 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChatShaker.ChatMauiApp.Views.ChatViewPage"
              xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
              xmlns:dtos="clr-namespace:ChatShaker.ChatMauiApp.Models.Dto"
              x:DataType="viewModels:ChatViewModel"
              xmlns:prism="http://prismlibrary.com"
-             prism:ViewModelLocator.AutowireViewModel="Automatic"
-             Title="ChatViewPage">
+             prism:ViewModelLocator.AutowireViewModel="Automatic">
 
-    <Grid RowDefinitions="*,Auto">
+    <ContentView.Content>
+        <Grid RowDefinitions="*,Auto" Padding="12">
 
-        <CollectionView 
-            Grid.Row="0"
-            ItemsSource="{Binding Messages}"
-            VerticalOptions="Fill"
-            RemainingItemsThreshold="3"
-            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+            <CollectionView 
+                Grid.Row="0"
+                ItemsSource="{Binding Messages}"
+                VerticalOptions="Fill"
+                RemainingItemsThreshold="3"
+                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dtos:MessageDto">
-                    <Frame Padding="8"
-                           CornerRadius="10">
-                        <StackLayout Spacing="2">
-                            <Label
-                                FontSize="12"
-                                Opacity="0.7"
-                                Text="{Binding SenderName}">
-                            </Label>
-                            <Label
-                                FontSize="16"
-                                Text="{Binding CipherText}" />
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
+                </CollectionView.ItemsLayout>
 
-                            <StackLayout Orientation="Horizontal">
-                                <Label Text="{Binding SentDataTimeUtc, StringFormat='{0:yyyy-MM-dd HH:mm}'}"
-                                       FontSize="10" />
-                                <Label Text="{Binding Status}" FontSize="10" />
-                            </StackLayout>
-                        </StackLayout>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-        
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
-            <Entry 
-                Text="{Binding OngoingText}" 
-                Placeholder="Write your message..." />
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:MessageDto">
+                        <Grid Padding="10,2">
+                            <Border Padding="12,8"
+                                    StrokeThickness="0"
+                                    HorizontalOptions="Start"
+                                    BackgroundColor="{StaticResource Gray100}">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="15,15,15,2" />
+                                </Border.StrokeShape>
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsMine}" Value="True">
+                                        <Setter Property="HorizontalOptions" Value="End" />
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="StrokeShape">
+                                            <Setter.Value>
+                                                <RoundRectangle CornerRadius="15,15,2,15" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Border.Triggers>
+
+                                <StackLayout Spacing="2" MinimumWidthRequest="80">
+                                    <Label FontSize="11" 
+                                           TextColor="{StaticResource Gray600}"
+                                           Text="{Binding SenderName}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                    
+                                    <Label FontSize="15" 
+                                           TextColor="Black"
+                                           Text="{Binding CipherText}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                <Setter Property="TextColor" Value="White" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+
+                                    <StackLayout Orientation="Horizontal" HorizontalOptions="End" Spacing="4">
+                                        <Label Text="{Binding SentAtUtc, StringFormat='{0:HH:mm}'}"
+                                               FontSize="10" 
+                                               TextColor="{StaticResource Gray600}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource Gray200}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <Label Text="{Binding Status}" 
+                                               FontSize="10" 
+                                               TextColor="{StaticResource Gray600}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource Gray200}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </StackLayout>
+                                </StackLayout>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             
-            <Button Grid.Column="1"
-                    Text="Send"
-                    Command="{Binding SendMessageCommand}" />
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,8,0,0" HeightRequest="50">
+                <Border StrokeThickness="1" 
+                        Stroke="{StaticResource Gray300}" 
+                        Padding="15,0" 
+                        StrokeShape="RoundRectangle 25">
+                    <Entry 
+                        Text="{Binding OngoingText}" 
+                        Placeholder="Write your message..."
+                        VerticalOptions="Center" />
+                </Border>
+                
+                <Button Grid.Column="1"
+                        Text="Send"
+                        CornerRadius="25"
+                        Command="{Binding SendMessageCommand}" 
+                        Margin="8,0,0,0"
+                        Padding="20,0"/>
+            </Grid>
         </Grid>
-    </Grid>
-</ContentPage>
+    </ContentView.Content>
+</ContentView>

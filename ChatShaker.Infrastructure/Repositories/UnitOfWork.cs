@@ -27,9 +27,9 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new InvalidOperationException(ex.Message);
+            throw;
         }
     }
 
@@ -41,9 +41,9 @@ public class UnitOfWork : IUnitOfWork, IDisposable
             if (_transaction != null)
                 await _transaction.CommitAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new InvalidOperationException(ex.Message);
+            throw;
         }
         finally
         {
@@ -58,9 +58,9 @@ public class UnitOfWork : IUnitOfWork, IDisposable
             if (_transaction != null)
                 await _transaction.RollbackAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new InvalidOperationException(ex.Message);
+            throw;
         }
         finally
         {

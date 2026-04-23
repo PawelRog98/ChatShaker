@@ -32,27 +32,42 @@ public class InitializeNewDirecChatCommandHandler : IRequestHandler<InitializeNe
         try
         {
             await _unitOfWork.BeginTransaction(cancellationToken);
-        
-            var users = await _userRepository.GetUsersByPublicId(request.ChatRoomDto.ChatRoomKeyBlobDtos.Select(x=>x.UserPublicId).ToList(), cancellationToken);
+
+            var usersIds = request.ChatRoomDto.ChatRoomKeyBlobDtos.Select(x => x.UserPublicId).ToList();
+            var users = await _userRepository.GetUsersByPublicId(usersIds, cancellationToken);
         
             var chatRoom = await _chatRoomRepository.GetByPublicId(request.ChatRoomDto.ChatRoomPublicId, cancellationToken);
         
             foreach (var roomBlobDto in request.ChatRoomDto.ChatRoomKeyBlobDtos)
             {
                 var user = users.FirstOrDefault(x=>x.PublicId == roomBlobDto.UserPublicId);
+                if (user == null) continue;
             
-                var chatBlob = chatRoom.ChatRoomKeyBlobs.FirstOrDefault(x=>x.UserId == user.Id);
-                chatBlob.EncryptedRoomKey = roomBlobDto.EncryptedRoomKey;
-                chatBlob.DeviceId = roomBlobDto.DeviceId;
-                chatBlob.Version = 1;
+                var existingBlobs = chatRoom.ChatRoomKeyBlobs.Where(x => x.UserId == user.Id).ToList();
+                
+                foreach(var existingBlob in existingBlobs)
+                {
+                    chatRoom.ChatRoomKeyBlobs.Remove(existingBlob);
+                }
 
+                var newBlob = new ChatRoomKeyBlob
+                {
+                    ChatRoomId = chatRoom.Id,
+                    UserId = user.Id,
+                    EncryptedRoomKey = roomBlobDto.EncryptedRoomKey,
+                    DeviceId = roomBlobDto.DeviceId ?? "Default",
+                    Version = 1,
+                    CreatedAtUtc = DateTime.UtcNow
+                };
+                
+                chatRoom.ChatRoomKeyBlobs.Add(newBlob);
             }
         
             chatRoom.IsInitialized = true;
 
             await _unitOfWork.Commit(cancellationToken);
         }
-        catch 
+        catch (Exception ex)
         {
             await _unitOfWork.Rollback(cancellationToken);
             throw;

@@ -13,4 +13,6 @@ public interface IChatConnectionService
     Task AddUser(Guid roomPublicId);
     Task SendMessage(MessageDto messageDto);
     Task JoinRoom(Guid roomPublicId);
+    Task MarkAsRead(Guid messagePublicId);
+    Task MarkAsDelivered(Guid messagePublicId);
 }

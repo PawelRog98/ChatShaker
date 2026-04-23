@@ -4,10 +4,11 @@ using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
 using Prism.Commands;
 using Prism.Navigation;
+using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class ChatListViewModel : BindableBase, IInitializeAsync
+public class ChatListViewModel : BindableBase, INavigatedAware
 {
     private string _name;
     public string Name
@@ -21,6 +22,7 @@ public class ChatListViewModel : BindableBase, IInitializeAsync
     private readonly INavigationService _navigationService;
     private readonly IChatConnectionService _chatConnectionService;
     private readonly IAppPopupService _popupService;
+    private readonly IRegionManager _regionManager;
 
     private CancellationTokenSource _cancellationToken;
 
@@ -31,18 +33,20 @@ public class ChatListViewModel : BindableBase, IInitializeAsync
         ISignalRConnectionManager connectionManager, 
         INavigationService navigationService, 
         IChatConnectionService chatConnectionService,
-        IAppPopupService popupService)
+        IAppPopupService popupService,
+        IRegionManager regionManager)
     {
         _roomApiService = roomApiService;
         _connectionManager = connectionManager;
         _navigationService = navigationService;
         _chatConnectionService = chatConnectionService;
         _popupService = popupService;
+        _regionManager = regionManager;
 
         OpenChatCommand = new DelegateCommand<ChatListItem>(OpenChat);
     }
 
-    public async Task InitializeAsync(INavigationParameters parameters)
+    public async void OnNavigatedTo(INavigationParameters parameters)
     {
         try
         {
@@ -66,6 +70,11 @@ public class ChatListViewModel : BindableBase, IInitializeAsync
         }
     }
 
+    public void OnNavigatedFrom(INavigationParameters parameters)
+    {
+        _cancellationToken?.Cancel();
+    }
+
     private async Task<List<ChatListItem>> GetRoomItems()
     {
         var rooms = await _roomApiService.GetRooms();
@@ -77,9 +86,19 @@ public class ChatListViewModel : BindableBase, IInitializeAsync
     {
         var parameters = new NavigationParameters
         {
-            {"roomId", item.RoomPublicId}
+            {"RoomId", item.RoomPublicId}
         };
 
-        await _navigationService.NavigateAsync("ChatRoomPage", parameters);
+        _regionManager.RequestNavigate("MainRegion", "ChatRoomPage", navigationResult =>
+        {
+            if (navigationResult.Success == false && navigationResult.Exception != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Navigation failed: {navigationResult.Exception.Message}");
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await _popupService.ShowError($"Navigation failed: {navigationResult.Exception.Message}");
+                });
+            }
+        }, parameters);
     }
 }

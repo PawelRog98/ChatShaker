@@ -6,5 +6,5 @@ public class ChatListItemDto
     public string Name { get; set; }
     public string LastMessagePreview { get; set; }
     public DateTime LastMessageDate { get; set; }
-    bool IsRead { get; set; }
+    public bool IsRead { get; set; }
 }

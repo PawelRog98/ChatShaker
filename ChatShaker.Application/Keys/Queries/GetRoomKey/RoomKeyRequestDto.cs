@@ -1,6 +1,6 @@
 namespace ChatShaker.Application.Keys.GetRoomKey;
 
-public class RoomKeyReqestDto
+public class RoomKeyRequestDto
 {
     public Guid PublicId { get; set; }
     public long Version { get; set; }

@@ -35,15 +35,31 @@ public class GetUserRoomsQuery : IRequest<List<ChatListItemDto>>
             var lastMessages = await _messageRepository.GetLastMessageByRoom(roomsIds, cancellationToken);
 
             var roomDtos = new List<ChatListItemDto>();
-            foreach (var message in lastMessages)
+            foreach (var room in rooms)
             {
-                var room = rooms.FirstOrDefault(x => x.Id == message.ChatRoomId);
+                var message = lastMessages.FirstOrDefault(x => x.ChatRoomId == room.Id);
+                
+                var isRead = true;
+                if (message != null)
+                {
+                    if (message.SenderId == request.UserId)
+                    {
+                        isRead = true;
+                    }
+                    else
+                    {
+                        isRead = message.MessageStatuses
+                            .Any(x => x.UserId == request.UserId && x.Status == Domain.Enums.MessageStatusEnum.Read);
+                    }
+                }
+
                 var roomDto = new ChatListItemDto
                 {
                     RoomPublicId = room.PublicId,
-                    LastMessagePreview = message.CipherText,
-                    LastMessageDate = message.SentAtUtc,
-                    Name = room?.Name
+                    LastMessagePreview = message != null ? message.CipherText : "",
+                    LastMessageDate = message != null ? message.SentAtUtc : DateTime.UtcNow,
+                    Name = room?.Name,
+                    IsRead = isRead
                 };
 
                 roomDtos.Add(roomDto);

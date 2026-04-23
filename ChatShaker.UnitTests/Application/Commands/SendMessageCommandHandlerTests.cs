@@ -83,7 +83,8 @@ public class SendMessageCommandHandlerTests
 
         var messageStatus = new MessageStatus
         {
-            MessageId = message.Id,
+            Message = message,
+            UserId = userId,
             Status = Domain.Enums.MessageStatusEnum.Sent,
             UpdateAtUtc = DateTime.UtcNow
         };

@@ -2,7 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 
@@ -10,8 +13,10 @@ namespace ChatShaker.ChatMauiApp.Services;
 
 public class CryptoService : ICryptoService
 {
-    private const string PrivateIdentityKeyKey = "identity_private_key";
-    private const string PublicIdentityKeyKey = "identity_public_key";
+    private const string PrivateIdentityKeyKey = "identity_private_key_";
+    private const string PublicIdentityKeyKey = "identity_public_key_";
+    private const string SaltValue = "ChatShaker-v1-salt";
+    private const string InfoValue = "Chatshaker v1";
 
     private readonly IKeyApiService _keyApiService;
 
@@ -22,23 +27,21 @@ public class CryptoService : ICryptoService
 
     public Task<(string CipherMessageBase64, string NonceBase64)> EncryptMessage(byte[] roomKey, string plainText)
     {
-        var nonceBytes = RandomNumberGenerator.GetBytes(12);
-
+        var nonce = RandomNumberGenerator.GetBytes(12);
         var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-        var cipherBytes = new byte[plainTextBytes.Length];
-        var tag = new byte[16];
 
-        using var aes = new AesGcm(roomKey);
-        aes.Encrypt(nonceBytes, plainTextBytes, cipherBytes, tag);
+        var cipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(roomKey), 128, nonce);
+        cipher.Init(true, parameters);
 
-        var combined = new byte[cipherBytes.Length + tag.Length];
-        Buffer.BlockCopy(cipherBytes, 0, combined, 0, cipherBytes.Length);
-        Buffer.BlockCopy(tag, 0, combined, cipherBytes.Length, tag.Length);
+        var cipherTextBytes = new byte[cipher.GetOutputSize(plainTextBytes.Length)];
+        var len = cipher.ProcessBytes(plainTextBytes, 0, plainTextBytes.Length, cipherTextBytes, 0);
+        len += cipher.DoFinal(cipherTextBytes, len);
 
-        var cipherText = Convert.ToBase64String(combined);
-        var nonce = Convert.ToBase64String(nonceBytes);
+        var cipherText = Convert.ToBase64String(cipherTextBytes, 0, len);
+        var nonceBase64 = Convert.ToBase64String(nonce);
 
-        return Task.FromResult((cipherText, nonce));
+        return Task.FromResult((cipherText, nonceBase64));
     }
 
     public Task<string> DecryptMessage(byte[] roomKey, string cipherMessageBase64, string nonceBase64)
@@ -46,15 +49,15 @@ public class CryptoService : ICryptoService
         var combined = Convert.FromBase64String(cipherMessageBase64);
         var nonce = Convert.FromBase64String(nonceBase64);
 
-        var cipher = combined[..^16];
-        var tag = combined[^16..];
+        var cipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(roomKey), 128, nonce);
+        cipher.Init(false, parameters);
 
-        var plainText = new byte[cipher.Length];
+        var plainTextBytes = new byte[cipher.GetOutputSize(combined.Length)];
+        var len = cipher.ProcessBytes(combined, 0, combined.Length, plainTextBytes, 0);
+        len += cipher.DoFinal(plainTextBytes, len);
 
-        using var aes = new AesGcm(roomKey);
-        aes.Decrypt(nonce, cipher, tag, plainText);
-
-        var textToReturn = Encoding.UTF8.GetString(plainText);
+        var textToReturn = Encoding.UTF8.GetString(plainTextBytes, 0, len);
 
         return Task.FromResult(textToReturn);
     }
@@ -64,42 +67,49 @@ public class CryptoService : ICryptoService
         var generator = new X25519KeyPairGenerator();
         generator.Init(new X25519KeyGenerationParameters(new SecureRandom()));
         var ephKeyPair = generator.GenerateKeyPair();
-        
+
         var ephPrivateKey = (X25519PrivateKeyParameters)ephKeyPair.Private;
         var ephPublicKey = (X25519PublicKeyParameters)ephKeyPair.Public;
-        
+
         var recipientPublicKey = new X25519PublicKeyParameters(recipientPublicKeyBytes, 0);
-        
+
         byte[] secret = new byte[32];
         ephPrivateKey.GenerateSecret(recipientPublicKey, secret, 0);
-        
-        var kek = HkdfDeriveKey(secret, null, "Chatshaker v1", 32);
+
+        var kek = HkdfDeriveKey(secret, Encoding.UTF8.GetBytes(SaltValue), InfoValue, 32);
 
         var nonce = RandomNumberGenerator.GetBytes(12);
-        var cipher = new byte[roomKey.Length];
-        var tag = new byte[16];
+        
+        var gcmCipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(kek), 128, nonce);
+        gcmCipher.Init(true, parameters);
 
-        using var aes = new AesGcm(kek);
-        aes.Encrypt(nonce, roomKey, cipher, tag);
+        var cipherTextBytes = new byte[gcmCipher.GetOutputSize(roomKey.Length)];
+        var len = gcmCipher.ProcessBytes(roomKey, 0, roomKey.Length, cipherTextBytes, 0);
+        len += gcmCipher.DoFinal(cipherTextBytes, len);
 
         var ephPublicKeyBytes = ephPublicKey.GetEncoded();
 
-        var result = new byte[nonce.Length + cipher.Length + tag.Length + ephPublicKeyBytes.Length];
+        var result = new byte[nonce.Length + len + ephPublicKeyBytes.Length];
         Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
-        Buffer.BlockCopy(cipher, 0, result, nonce.Length, cipher.Length);
-        Buffer.BlockCopy(tag, 0, result, nonce.Length + cipher.Length, tag.Length);
-        Buffer.BlockCopy(ephPublicKeyBytes, 0, result, nonce.Length + cipher.Length + tag.Length, ephPublicKeyBytes.Length);
+        Buffer.BlockCopy(cipherTextBytes, 0, result, nonce.Length, len);
+        Buffer.BlockCopy(ephPublicKeyBytes, 0, result, nonce.Length + len, ephPublicKeyBytes.Length);
 
         return Task.FromResult(Convert.ToBase64String(result));
     }
 
     public Task<byte[]> DecryptRoomKey(string encryptedDataBase64, byte[] recipientPrivateKeyBytes)
     {
+        if (string.IsNullOrEmpty(encryptedDataBase64))
+            throw new ArgumentNullException(nameof(encryptedDataBase64));
+
         var combined = Convert.FromBase64String(encryptedDataBase64);
 
+        if (combined.Length < 60)
+            throw new ArgumentException("Encrypted data is too short.", nameof(encryptedDataBase64));
+
         var nonce = combined[..12];
-        var cipher = combined[12..^48];
-        var tag = combined[^48..^32];
+        var encryptedKeyWithTag = combined[12..^32];
         var ephPublicKeyBytes = combined[^32..];
 
         var recipientPrivateKey = new X25519PrivateKeyParameters(recipientPrivateKeyBytes, 0);
@@ -108,21 +118,29 @@ public class CryptoService : ICryptoService
         byte[] secret = new byte[32];
         recipientPrivateKey.GenerateSecret(ephSenderPublicKey, secret, 0);
 
-        var kek = HkdfDeriveKey(secret, null, "Chatshaker v1", 32);
+        var kek = HkdfDeriveKey(secret, Encoding.UTF8.GetBytes(SaltValue), InfoValue, 32);
 
-        var roomKey = new byte[cipher.Length];
+        var cipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(kek), 128, nonce);
+        cipher.Init(false, parameters);
 
-        using var aes = new AesGcm(kek);
-        aes.Decrypt(nonce, cipher, tag, roomKey);
+        var roomKey = new byte[cipher.GetOutputSize(encryptedKeyWithTag.Length)];
+        var len = cipher.ProcessBytes(encryptedKeyWithTag, 0, encryptedKeyWithTag.Length, roomKey, 0);
+        len += cipher.DoFinal(roomKey, len);
+
+        if (len < roomKey.Length)
+        {
+            var trimmedRoomKey = new byte[len];
+            Buffer.BlockCopy(roomKey, 0, trimmedRoomKey, 0, len);
+            return Task.FromResult(trimmedRoomKey);
+        }
 
         return Task.FromResult(roomKey);
     }
 
     public async Task SaveIdentityKey(string userId)
     {
-        SecureStorage.Remove(PrivateIdentityKeyKey);
-        
-        var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey);
+        var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey+userId);
         if (existingKey != null)
             return;
 
@@ -133,8 +151,8 @@ public class CryptoService : ICryptoService
         var privateKey = ((X25519PrivateKeyParameters)keyPair.Private).GetEncoded();
         var publicKey = ((X25519PublicKeyParameters)keyPair.Public).GetEncoded();
 
-        await SecureStorage.SetAsync(PrivateIdentityKeyKey, Convert.ToBase64String(privateKey));
-        await SecureStorage.SetAsync(PublicIdentityKeyKey, Convert.ToBase64String(publicKey));
+        await SecureStorage.SetAsync(PrivateIdentityKeyKey+userId, Convert.ToBase64String(privateKey));
+        await SecureStorage.SetAsync(PublicIdentityKeyKey+userId, Convert.ToBase64String(publicKey));
         
         var newUserKeyData = new UserKeyDataDto{
             PublicKey = Convert.ToBase64String(publicKey),
@@ -143,11 +161,9 @@ public class CryptoService : ICryptoService
         await _keyApiService.UploadIdentity(newUserKeyData);
     }
 
-    private static byte[] HkdfDeriveKey(byte[] secret, byte[]? salt, string info, int length)
+    private static byte[] HkdfDeriveKey(byte[] secret, byte[] salt, string info, int length)
     {
-        salt ??= Encoding.UTF8.GetBytes("ChatShaker-v1-salt");
         var infoBytes = Encoding.UTF8.GetBytes(info);
-
         return HKDF.DeriveKey(HashAlgorithmName.SHA256, secret, length, salt, infoBytes);
     }
 }

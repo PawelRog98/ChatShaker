@@ -8,17 +8,19 @@ namespace ChatShaker.ChatMauiApp.Services;
 public class RoomKeyService : IRoomKeyService
 {
     private const string RoomKeyKey = "room_key";
-    private const string PrivateIdentityKeyKey = "identity_private_key";
+    private const string PrivateIdentityKeyKey = "identity_private_key_";
     
     private readonly IKeyApiService _keyApiService;
     private readonly ICryptoService _cryptoService;
     private readonly IRoomApiService _roomApiService;
+    private readonly IAuthTokenProvider _authTokenProvider;
 
-    public RoomKeyService(IKeyApiService keyApiService,  ICryptoService cryptoService,  IRoomApiService roomApiService)
+    public RoomKeyService(IKeyApiService keyApiService,  ICryptoService cryptoService,  IRoomApiService roomApiService, IAuthTokenProvider authTokenProvider)
     {
         _keyApiService = keyApiService;
         _cryptoService = cryptoService;
         _roomApiService = roomApiService;
+        _authTokenProvider = authTokenProvider;
     }
     
     private byte[] GenerateRoomKey(int size=32)
@@ -26,28 +28,59 @@ public class RoomKeyService : IRoomKeyService
     
     public async Task<byte[]> GetRoomKey(Guid roomPublicId)
     {
-        var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
-        
-        string roomKeyData = string.Empty;
-        byte[] roomKey;
-        roomKeyData = await SecureStorage.GetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}");
+        try
+        {
+            var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
+            if (roomVersion == null || !roomVersion.Success)
+            {
+                throw new Exception($"Failed to get room key version: {roomVersion?.Message}");
+            }
 
-        if (string.IsNullOrEmpty(roomKeyData))
-        {
-            var roomKeyEncryptedData = await _keyApiService.GetRoomKey(roomPublicId, roomVersion.Data);
-            var privateKeyData = await SecureStorage.GetAsync($"{PrivateIdentityKeyKey}");
-            
-            var privateKey = Encoding.UTF8.GetBytes(privateKeyData);
-            
-            roomKey = await _cryptoService.DecryptRoomKey(roomKeyEncryptedData.Data, privateKey);
-            await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}", Convert.ToBase64String(roomKey));
+            var deviceId = $"{DeviceInfo.Current.VersionString}@{DeviceInfo.Current.Model}";
+
+            string roomKeyData = string.Empty;
+            byte[] roomKey;
+            roomKeyData = await SecureStorage.GetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}");
+
+            if (string.IsNullOrEmpty(roomKeyData))
+            {
+                var roomKeyInfoRequest = new RoomKeyRequestInfoDto
+                {
+                    Version = roomVersion.Data,
+                    DeviceId = deviceId,
+                    PublicId = roomPublicId
+                };
+
+                var roomKeyEncryptedData = await _keyApiService.GetRoomKey(roomKeyInfoRequest);
+                if (roomKeyEncryptedData == null || !roomKeyEncryptedData.Success || string.IsNullOrEmpty(roomKeyEncryptedData.Data))
+                {
+                    throw new Exception($"Failed to retrieve encrypted room key: {roomKeyEncryptedData?.Message}");
+                }
+                
+                var userData = await _authTokenProvider.GetAuthToken();
+
+                var privateKeyData = await SecureStorage.GetAsync(PrivateIdentityKeyKey+userData.UserId);
+                if (string.IsNullOrEmpty(privateKeyData))
+                {
+                    throw new InvalidOperationException("Private identity key not found");
+                }
+
+                var privateKey = Convert.FromBase64String(privateKeyData);
+
+                roomKey = await _cryptoService.DecryptRoomKey(roomKeyEncryptedData.Data, privateKey);
+                await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}", Convert.ToBase64String(roomKey));
+            }
+            else
+            {
+                roomKey = Convert.FromBase64String(roomKeyData);
+            }
+
+            return roomKey;
         }
-        else
+        catch (Exception ex)
         {
-            roomKey = Encoding.UTF8.GetBytes(roomKeyData);
+            throw new Exception($"Error in GetRoomKey for room {roomPublicId}: {ex.Message}", ex);
         }
-        
-        return roomKey;
     }  
 
     public async Task GenerateAndSaveRoomKey(IEnumerable<UserKeyDataDto> userKeys, string name)
@@ -68,7 +101,7 @@ public class RoomKeyService : IRoomKeyService
 
             var dataToSave = new RoomKeyDataDto
             {
-                UserId =  user.PublicUserId.Value,
+                UserPublicId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
                 Version = 1,
                 DeviceId = user.DeviceId
@@ -77,7 +110,7 @@ public class RoomKeyService : IRoomKeyService
             publicKeys.Add(dataToSave);
         }
         
-        room.Keys = publicKeys;
+        room.ChatRoomKeyBlobDtos = publicKeys;
         await _keyApiService.SaveRoomKey(room);
     }
 
@@ -88,8 +121,8 @@ public class RoomKeyService : IRoomKeyService
         var publicKeys = new List<RoomKeyDataDto>();
         var room = new RoomDto
         {
-            PublicId = roomPublicId,
-            Keys = publicKeys
+            ChatRoomPublicId = roomPublicId,
+            ChatRoomKeyBlobDtos = publicKeys
         };
 
         foreach (var user in userKeys)
@@ -100,7 +133,7 @@ public class RoomKeyService : IRoomKeyService
             
             var dataToSave = new RoomKeyDataDto
             {
-                UserId =  user.PublicUserId.Value,
+                UserPublicId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
                 Version = 1,
                 DeviceId =  user.DeviceId
@@ -108,7 +141,7 @@ public class RoomKeyService : IRoomKeyService
             
             publicKeys.Add(dataToSave);
         }
-        room.Keys = publicKeys;
+        room.ChatRoomKeyBlobDtos = publicKeys;
         
         await _keyApiService.InitializeRoom(room);
     }
@@ -130,7 +163,7 @@ public class RoomKeyService : IRoomKeyService
             
             var dataToSave = new RoomKeyDataDto
             {
-                UserId =  user.PublicUserId.Value,
+                UserPublicId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
                 Version = nextVersion,
                 DeviceId = user.DeviceId
@@ -146,7 +179,7 @@ public class RoomKeyService : IRoomKeyService
     {
         var roomKeyData = await SecureStorage.GetAsync($"{RoomKeyKey}_{roomPublicId}_{version}");
         
-        var roomKey = Encoding.UTF8.GetBytes(roomKeyData);
+        var roomKey = Convert.FromBase64String(roomKeyData);
         
         var encryptedKeys =  new List<RoomKeyDataDto>();
 
@@ -157,7 +190,7 @@ public class RoomKeyService : IRoomKeyService
             
             encryptedKeys.Add(new RoomKeyDataDto
             {
-                UserId =  device.PublicUserId.Value,
+                UserPublicId =  device.PublicUserId.Value,
                 EncryptedRoomKey = encryptedRoomKey,
                 Version = version,
                 IsHost = false,

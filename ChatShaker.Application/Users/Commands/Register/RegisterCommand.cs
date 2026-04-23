@@ -56,6 +56,9 @@ namespace ChatShaker.Application.Users.Commands.Register
 
             var defaultRole = await _roleRepository.GetIdByName("User", cancellationToken);
 
+            if(!command.Register.DateOfBirth.HasValue)
+                throw new BadRequestException("Date of birth is required.");
+
             var user = new User
             {
                 Email = command.Register.Email,

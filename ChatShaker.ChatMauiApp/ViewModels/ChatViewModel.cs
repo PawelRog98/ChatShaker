@@ -3,10 +3,11 @@ using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Models.Enums;
 using ChatShaker.ChatMauiApp.Services.Api;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class ChatViewModel : BaseViewModel, INavigationAware
+public class ChatViewModel : BaseViewModel, IRegionAware
 {
     #region Properties
     private string _ongoingText;
@@ -23,11 +24,14 @@ public class ChatViewModel : BaseViewModel, INavigationAware
     private readonly IUserApiService _userApiService;
     private readonly IRoomApiService _roomApiService;
     private readonly IKeyApiService _keyApiService;
+    private readonly ICryptoService _cryptoService;
+    private readonly IAuthTokenProvider _authTokenProvider;
+    private readonly IAppPopupService _popupService;
     
     public ChatHistoryViewModel History { get; }
 
     private Guid _roomId;
-    private byte[] _roomKey;
+    private string _userId;
 
     public DelegateCommand SendMessageCommand { get;}
     public DelegateCommand LoadMoreCommand { get;}
@@ -40,6 +44,9 @@ public class ChatViewModel : BaseViewModel, INavigationAware
         IUserApiService userApiService,
         IRoomApiService roomApiService,
         IKeyApiService  keyApiService,
+        ICryptoService cryptoService,
+        IAuthTokenProvider authTokenProvider,
+        IAppPopupService popupService,
         ChatHistoryViewModel history)
     {
         _chatHub = chatHub;
@@ -48,14 +55,16 @@ public class ChatViewModel : BaseViewModel, INavigationAware
         _userApiService = userApiService;
         _roomApiService = roomApiService;
         _keyApiService = keyApiService;
+        _cryptoService = cryptoService;
+        _authTokenProvider = authTokenProvider;
+        _popupService = popupService;
         
         History = history;
 
         SendMessageCommand = new DelegateCommand(SendMessage);
         LoadMoreCommand = new DelegateCommand(LoadMore);
         
-
-        _chatHub.OnMessageSent += OmMessageSent;
+        _chatHub.OnMessageSent += OnMessageSent;
         _chatHub.OMessageDelivered += OnMessageDelivered;
         _chatHub.OnMessageRead += OnMessageRead;
         History.OnMessageLoaded += OnMessagesLoaded;
@@ -63,53 +72,119 @@ public class ChatViewModel : BaseViewModel, INavigationAware
 
     private async void SendMessage()
     {
-        if(string.IsNullOrWhiteSpace(OngoingText))
-            return;
-        
-        var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, OngoingText);
-
-        await _chatHub.SendMessage(new MessageDto
+        try
         {
-            CipherText = encryptedText,
-            Nonce = nonce,
-            ClientMessageId = Guid.NewGuid(),
-            ChatRoomPublicId =  _roomId,
-            Status = MessageStatusEnum.Sent,
-            SentDataTimeUtc =  DateTime.UtcNow
-        });
-        
-        OngoingText = string.Empty;
-        RaisePropertyChanged(nameof(OngoingText));
+            if (string.IsNullOrWhiteSpace(OngoingText))
+                return;
+
+            var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, OngoingText);
+
+            await _chatHub.SendMessage(new MessageDto
+            {
+                CipherText = encryptedText,
+                Nonce = nonce,
+                ClientMessageId = Guid.NewGuid(),
+                ChatRoomPublicId = _roomId,
+                Status = MessageStatusEnum.Sent,
+                SentAtUtc = DateTime.UtcNow
+            });
+
+            OngoingText = string.Empty;
+            RaisePropertyChanged(nameof(OngoingText));
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError($"Failed to send message: {ex.Message}");
+        }
     }
 
     private async void LoadMore()
     {
-        await History.LoadMessages(_roomId);
+        try
+        {
+            await History.LoadMessages(_roomId);
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError($"Failed to load more messages: {ex.Message}");
+        }
     }
 
-    private void OmMessageSent(MessageDto message)
+    private async void OnMessageSent(MessageDto message)
     {
-        MainThread.BeginInvokeOnMainThread(() =>{
-            Messages.Add(message);
-        });
+        try
+        {
+            await Task.Run(async () =>
+            {
+                var roomKey = await _roomKeyService.GetRoomKey(_roomId);
+                message.CipherText = await _cryptoService.DecryptMessage(roomKey, message.CipherText, message.Nonce);
+            });
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (Messages.All(m => m.ClientMessageId != message.ClientMessageId))
+                {
+                    message.IsMine = message.SenderPublicId?.ToString() == _userId;
+                    Messages.Add(message);
+                }
+            });
+
+            var userIdAsGuid = Guid.Parse(_userId);
+            if (message.SenderPublicId != userIdAsGuid)
+            {
+                await _chatHub.MarkAsRead(message.PublicId);
+            }
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError($"Error processing received message: {ex.Message}");
+        }
     }
 
     private void OnMessageRead(Guid messagePublicId)
     {
-        var msg = Messages.FirstOrDefault(m => m.ClientMessageId == messagePublicId);
-        msg.Status = MessageStatusEnum.Read;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var msg = Messages.FirstOrDefault(m => m.PublicId == messagePublicId);
+            if (msg != null)
+            {
+                msg.Status = MessageStatusEnum.Read;
+            }
+        });
     }
 
     private void OnMessageDelivered(Guid messagePublicId)
     {
-        var msg = Messages.FirstOrDefault(m => m.ClientMessageId == messagePublicId);
-        msg.Status = MessageStatusEnum.Delivered;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var msg = Messages.FirstOrDefault(m => m.PublicId == messagePublicId);
+            if (msg != null)
+            {
+                msg.Status = MessageStatusEnum.Delivered;
+            }
+        });
     }
 
-    private void OnMessagesLoaded(IEnumerable<MessageDto> messages)
+    private async void OnMessagesLoaded(IEnumerable<MessageDto> messages)
     {
-        foreach(var message in messages.Reverse())
-            Messages.Insert(0,message);
+        MainThread.BeginInvokeOnMainThread(() => {
+            foreach(var message in messages)
+            {
+                if (Messages.All(m => m.ClientMessageId != message.ClientMessageId))
+                {
+                    message.IsMine = message.SenderPublicId?.ToString() == _userId;
+                    Messages.Insert(0, message);
+                }
+            }
+        });
+
+        var userIdAsGuid = Guid.Parse(_userId);
+        var messagesUnred = messages.Where(x => x.Status != MessageStatusEnum.Read && x.SenderPublicId != userIdAsGuid).ToList();
+
+        foreach (var message in messagesUnred)
+        {
+            await _chatHub.MarkAsRead(message.PublicId);
+        }
     }
 
     private async Task InitializeChatData()
@@ -117,25 +192,55 @@ public class ChatViewModel : BaseViewModel, INavigationAware
         var response =  await _roomApiService.GetRoom(_roomId);
 
         var room = response.Data;
-        var usersData = await _userApiService.GetParticipants(room.Keys.Select(x => x.UserId).ToList());
+        var keys = room.ChatRoomKeyBlobDtos.Select(x => x.UserPublicId).ToList();
+        var usersData = await _userApiService.GetParticipants(keys);
         
-        await _roomKeyService.InitializeRoomKeyForExistingRoom(usersData.Data, room.PublicId.Value);
+        await _roomKeyService.InitializeRoomKeyForExistingRoom(usersData.Data, room.ChatRoomPublicId.Value);
     }
 
-    public void OnNavigatedFrom(INavigationParameters parameters)
+    public void OnNavigatedFrom(NavigationContext navigationContext)
     {
-        
+        UnsubscribeEvents();
     }
 
-    public async void OnNavigatedTo(INavigationParameters parameters)
+    private void UnsubscribeEvents()
+    {
+        _chatHub.OnMessageSent -= OnMessageSent;
+        _chatHub.OMessageDelivered -= OnMessageDelivered;
+        _chatHub.OnMessageRead -= OnMessageRead;
+        History.OnMessageLoaded -= OnMessagesLoaded;
+    }
+
+    public async void OnNavigatedTo(NavigationContext navigationContext)
+    {
+        IsBusy = true;
+        try
+        {
+            await Task.Run(async () => await InternalOnNavigatedTo(navigationContext.Parameters));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public bool IsNavigationTarget(NavigationContext navigationContext) => true;
+
+    private async Task InternalOnNavigatedTo(INavigationParameters parameters)
     {
         _roomId = parameters.GetValue<Guid>("RoomId");
+        _userId = _authTokenProvider.GetAuthToken().Result.UserId;
         
         var isInitialized = await _roomApiService.CheckIfRoomInitialized(_roomId);
         if (isInitialized.Data != true)
         {
-            InitializeChatData();
+            await InitializeChatData();
         }
+        
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            Messages.Clear();
+        });
         
         History.Reset();
         

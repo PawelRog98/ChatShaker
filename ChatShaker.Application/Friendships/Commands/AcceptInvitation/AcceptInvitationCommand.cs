@@ -59,7 +59,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             
             var recipient = await _userRepository.GetUserById(friendRequest.RecipientId, cancellationToken);
             
-            if(recipient.Id != request.UserId)
+            if(recipient == null || recipient.Id != request.UserId)
                 throw new BadAuthenticationException("You cannot accept invitation to other user");
 
             if (!request.AcceptanceDecisionDto.IsAccepted)
@@ -73,6 +73,9 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             friendRequest.Status = FriendRequestStatus.Accepted;
             
             var sender = await _userRepository.GetUserById(friendRequest.SenderId, cancellationToken);
+
+            if (sender == null)
+                throw new BadRequestException("Sender not found");
             
             var user1Id = Math.Min(recipient.Id, sender.Id);
             var user2Id = Math.Max(recipient.Id, sender.Id);
@@ -168,7 +171,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             return Unit.Value;
 
         }
-        catch(Exception ex)
+        catch(Exception)
         {
             await _unitOfWork.Rollback(cancellationToken);
             throw;

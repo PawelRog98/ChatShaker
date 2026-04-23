@@ -22,6 +22,7 @@ public class ChatRoomRepository : IChatRoomRepository
     public async Task<IEnumerable<ChatRoom>> GetUserRooms(long userId, CancellationToken cancellationToken)
     {
         return await _context.ChatRoomMemberships
+            .Include(x => x.ChatRoom)
             .Where(x => x.UserId == userId)
             .Select(x => x.ChatRoom)
             .ToListAsync(cancellationToken);
@@ -37,6 +38,7 @@ public class ChatRoomRepository : IChatRoomRepository
     {
         return await _context.ChatRooms
             .Include(x=>x.ChatRoomKeyBlobs)
+            .ThenInclude(x=>x.User)
             .FirstOrDefaultAsync(x => x.PublicId == publicId, cancellationToken);
     }
 
@@ -49,8 +51,11 @@ public class ChatRoomRepository : IChatRoomRepository
 
     public async Task<long> GetNewestRoomVersion(Guid publicId, CancellationToken cancellationToken)
     {
-        return await _context.ChatRoomKeyBlobs
+        var result = await _context.ChatRoomKeyBlobs
             .Where(x => x.ChatRoom.PublicId == publicId)
-            .MaxAsync(x => (long?)x.Version ?? 0);
+            .Select(x => (long?)x.Version)
+            .MaxAsync(cancellationToken);
+
+        return result ?? 0;
     }
 }

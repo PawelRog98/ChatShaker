@@ -4,6 +4,7 @@ using ChatShaker.Application.Chats.Commands.AddMemberToRoom;
 using ChatShaker.Application.Chats.CreateChatRoom.Commands;
 using ChatShaker.Application.Chats.GetNewestRoomVersion;
 using ChatShaker.Application.Chats.Queries.CheckIfRoomIsInitialized;
+using ChatShaker.Application.Chats.Queries.GetRoom;
 using ChatShaker.Application.Chats.Queries.GetUserRooms;
 using ChatShaker.Application.MessagesManagment.Queries;
 using MediatR;
@@ -53,7 +54,12 @@ public class ChatRoomController : ControllerBase
     [HttpGet("{roomPublicId:guid}/messages")]
     public async Task<IActionResult> GetHistoryMessages(Guid roomPublicId, [FromQuery] int pageIndex, [FromQuery] int pageSize)
     {
-        var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, pageIndex, pageSize));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+
+        var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, long.Parse(userId), pageIndex, pageSize));
         
         return ApiResponse.Ok(result);
     }
@@ -64,6 +70,22 @@ public class ChatRoomController : ControllerBase
     public async Task<IActionResult> GetInfoIfInitialized(Guid publicId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CheckIfRoomIsInitializedQuery(publicId), cancellationToken);
+        
+        return ApiResponse.Ok(result);
+    }
+
+    [HttpGet("{publicId}")]
+    [ProducesResponseType(typeof(Response<RoomDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetRoom(Guid publicId, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+        
+        var result = await _mediator.Send(new GetRoomQuery(publicId, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result);
     }

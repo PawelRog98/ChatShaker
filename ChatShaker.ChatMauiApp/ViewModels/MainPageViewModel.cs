@@ -13,6 +13,13 @@ public class MainPageViewModel : BaseViewModel, INavigationAware
     public DelegateCommand<string> NavigateRegionCommand { get; }
     public DelegateCommand LogoutCommand { get; }
 
+    private string _currentView;
+    public string CurrentView
+    {
+        get => _currentView;
+        set => SetProperty(ref _currentView, value);
+    }
+
     public MainPageViewModel(IRegionManager regionManager, INavigationService navigationService, IAuthTokenProvider authTokenProvider)
     {
         _regionManager = regionManager;
@@ -31,6 +38,10 @@ public class MainPageViewModel : BaseViewModel, INavigationAware
             {
                 System.Diagnostics.Debug.WriteLine($"Navigation failed: {navigationResult.Exception.Message}");
             }
+            else
+            {
+                CurrentView = viewName;
+            }
         });
     }
 
@@ -46,6 +57,9 @@ public class MainPageViewModel : BaseViewModel, INavigationAware
 
     public void OnNavigatedTo(INavigationParameters parameters)
     {
-        Navigate("ChatListPage");
+        if (string.IsNullOrEmpty(CurrentView))
+        {
+            Navigate("ChatListPage");
+        }
     }
 }

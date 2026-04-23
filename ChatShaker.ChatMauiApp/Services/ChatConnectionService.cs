@@ -18,8 +18,12 @@ public class ChatConnectionService : IChatConnectionService
     public event Action<Guid>? OnMessageRead;
     public event Action<Guid>? OnUserAdded;
 
+    private bool _eventsBound = false;
     public void BindEvents()
     {
+        if (_eventsBound) return;
+        _eventsBound = true;
+
         var connection = _signalRConnectionManager.Connection;
 
         connection.On<MessageDto>("MessageSent", message =>
@@ -37,6 +41,12 @@ public class ChatConnectionService : IChatConnectionService
 
     public async Task AddUser(Guid roomPublicId)
         => await _signalRConnectionManager.Connection.InvokeAsync("AddUser");
+
+    public async Task MarkAsRead(Guid messagePublicId)
+       => await _signalRConnectionManager.Connection.InvokeAsync("MarkAsRead", messagePublicId);
+
+    public async Task MarkAsDelivered(Guid messagePublicId)
+        => await _signalRConnectionManager.Connection.InvokeAsync("MarkAsDelivered", messagePublicId);
 
     public async Task SendMessage(MessageDto messageDto)
         => await _signalRConnectionManager.Connection.InvokeAsync("SendMessage", messageDto);
