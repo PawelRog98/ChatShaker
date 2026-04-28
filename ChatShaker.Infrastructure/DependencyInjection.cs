@@ -22,6 +22,7 @@ using ChatShaker.Infrastructure.Repositories;
 using ChatShaker.Domain.Serivces;
 using ChatShaker.Domain.Services;
 using ChatShaker.Infrastructure.ChatRoomServices;
+using ChatShaker.Infrastructure.FileManagement;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ChatShaker.Infrastructure
@@ -33,6 +34,7 @@ namespace ChatShaker.Infrastructure
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<IEncryptionService, EncryptionService>();
             services.AddScoped<ICodeGenerationService, CodeGenerationService>();
             
@@ -47,6 +49,7 @@ namespace ChatShaker.Infrastructure
             services.AddScoped<IUserPublicKeyRepository, UserPublicKeyRepository>();
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+            services.AddScoped<IFileResourceRepository, FileResourceRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             #region JWT

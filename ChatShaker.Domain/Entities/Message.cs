@@ -1,4 +1,5 @@
 using ChatShaker.Domain.Abstractions;
+using ChatShaker.Domain.Enums;
 
 namespace ChatShaker.Domain.Entities;
 
@@ -16,6 +17,7 @@ public class Message : ICommonData
     public string Nonce { get; set; }
     public DateTime SentAtUtc { get; set; }
     public Guid ClientMessageId { get; set; }
+    public MessageTypeEnum  MessageType { get; set; }
     public virtual ICollection<MessageStatus> MessageStatuses { get; set; } = new List<MessageStatus>();
 
 }

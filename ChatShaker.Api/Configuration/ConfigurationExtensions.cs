@@ -15,7 +15,8 @@ namespace ChatShaker.Api.Configuration
             { "EmailConfiguration:EmailSmtp", Environment.GetEnvironmentVariable("EMAIL_SMTP") },
             { "EmailConfiguration:Email", Environment.GetEnvironmentVariable("EMAIL") },
             { "EmailConfiguration:EmailPassword", Environment.GetEnvironmentVariable("EMAIL_PASSWORD") },
-            { "EmailConfiguration:Port", Environment.GetEnvironmentVariable("EMAIL_PORT") }
+            { "EmailConfiguration:Port", Environment.GetEnvironmentVariable("EMAIL_PORT") },
+            { "FileStorage:RootPath", Environment.GetEnvironmentVariable("FILES_STORAGE") },
         };
 
         public static IConfigurationBuilder AddMainConfiguration(this IConfigurationBuilder builder)

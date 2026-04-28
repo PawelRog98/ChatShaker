@@ -25,6 +25,7 @@ namespace ChatShaker.Infrastructure.Data
         public DbSet<MessageStatus> MessageStatuses { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<FileResource> FileResources { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
