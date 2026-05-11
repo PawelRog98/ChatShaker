@@ -31,9 +31,10 @@ public class ChatControllerTest : IntegrationTestBase
         {
             usersDto.Add(new UserEncryptionDto
             {
-                PublicId = userData.PublicId,
+                UserId = userData.PublicId,
                 EncryptedUserKey = Guid.NewGuid().ToString(),
-                isHost = users.First() == userData ? true : false 
+                IsHost = users.First() == userData ? true : false,
+                DeviceId = "test-device"
             });
         }
 
@@ -41,10 +42,10 @@ public class ChatControllerTest : IntegrationTestBase
         {
             Name = "test1",
             CreatedAtUtc = DateTime.UtcNow,
-            Users = usersDto
+            Keys = usersDto
         };
 
-        var response = await HttpClient.PostAsJsonAsync("api/chatroom/create-room", createChatRoomDto);
+        var response = await HttpClient.PostAsJsonAsync("api/keys/create-room", createChatRoomDto);
 
         response.EnsureSuccessStatusCode();
         var data = await response.Content.ReadFromJsonAsync<Response<object>>();
@@ -66,19 +67,20 @@ public class ChatControllerTest : IntegrationTestBase
         var usersDto = new List<UserEncryptionDto>();
         usersDto.Add(new UserEncryptionDto
             {
-                PublicId = host.PublicId,
+                UserId = host.PublicId,
                 EncryptedUserKey = Guid.NewGuid().ToString(),
-                isHost = true
+                IsHost = true,
+                DeviceId = "test-device"
             });
 
         var createChatRoomDto = new CreateChatRoomDto
         {
             Name = "test2",
             CreatedAtUtc = DateTime.UtcNow,
-            Users = usersDto
+            Keys = usersDto
         };
 
-        var response = await HttpClient.PostAsJsonAsync("api/chatroom/create-room", createChatRoomDto);
+        var response = await HttpClient.PostAsJsonAsync("api/keys/create-room", createChatRoomDto);
 
         response.EnsureSuccessStatusCode();
         var data = await response.Content.ReadFromJsonAsync<Response<Guid>>();
@@ -89,7 +91,8 @@ public class ChatControllerTest : IntegrationTestBase
         {
             RoomPublicId = roomPublicId,
             UserToAddPublicId = userToAdd.PublicId,
-            EncryptedKey = "test_encrypted_key_111"
+            EncryptedKey = "test_encrypted_key_111",
+            DeviceId = "test-device"
         };
 
         var responseRoom = await HttpClient.PostAsJsonAsync("api/chatroom/add-member", dtoMember);
@@ -124,7 +127,8 @@ public class ChatControllerTest : IntegrationTestBase
         {
             RoomPublicId = Guid.NewGuid(),
             UserToAddPublicId = userToAdd.PublicId,
-            EncryptedKey = "test_encrypted_key_222"
+            EncryptedKey = "test_encrypted_key_222",
+            DeviceId = "test-device"
         };
 
         var response = await HttpClient.PostAsJsonAsync("api/chatroom/add-member", dtoMember);
@@ -147,19 +151,20 @@ public class ChatControllerTest : IntegrationTestBase
         var usersDto = new List<UserEncryptionDto>();
         usersDto.Add(new UserEncryptionDto
             {
-                PublicId = host.PublicId,
+                UserId = host.PublicId,
                 EncryptedUserKey = Guid.NewGuid().ToString(),
-                isHost = true
+                IsHost = true,
+                DeviceId = "test-device"
             });
 
         var createChatRoomDto = new CreateChatRoomDto
         {
             Name = "test2",
             CreatedAtUtc = DateTime.UtcNow,
-            Users = usersDto
+            Keys = usersDto
         };
 
-        var response = await HttpClient.PostAsJsonAsync("api/chatroom/create-room", createChatRoomDto);
+        var response = await HttpClient.PostAsJsonAsync("api/keys/create-room", createChatRoomDto);
 
         response.EnsureSuccessStatusCode();
         var data = await response.Content.ReadFromJsonAsync<Response<Guid>>();
@@ -170,7 +175,8 @@ public class ChatControllerTest : IntegrationTestBase
         {
             RoomPublicId = roomPublicId,
             UserToAddPublicId = Guid.NewGuid(),
-            EncryptedKey = "test_encrypted_key_333"
+            EncryptedKey = "test_encrypted_key_333",
+            DeviceId = "test-device"
         };
 
         var responseMember = await HttpClient.PostAsJsonAsync("api/chatroom/add-member", dtoMember);

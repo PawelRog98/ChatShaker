@@ -18,7 +18,11 @@ public class KeyApiService : IKeyApiService
     public async Task<Response<object>> UploadIdentity(UserKeyDataDto userKey)
     {
         var response = await _httpClient.PostAsJsonAsync("api/keys/save-identity", userKey);
-        return await response.Content.ReadFromJsonAsync<Response<object>>();
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Response<object>>() ?? new Response<object> { Success = false, Message = "Empty response" };
+        }
+        return new Response<object> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
     public async Task<Response<List<UserKeyDataDto>>> GetPublicIdentities(List<Guid> userIds)
@@ -26,27 +30,43 @@ public class KeyApiService : IKeyApiService
         var queryParams = userIds.Select(id => new KeyValuePair<string?, string?>("userIds", id.ToString()));
         
         string uri = QueryHelpers.AddQueryString("api/keys/get-public-identities",  queryParams);
-        var response = await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>(uri);
+        var response = await _httpClient.GetAsync(uri);
         
-        return response;
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Response<List<UserKeyDataDto>>>() ?? new Response<List<UserKeyDataDto>> { Success = false, Message = "Empty response" };
+        }
+        return new Response<List<UserKeyDataDto>> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
     public async Task<Response<string>> GetRoomKey(RoomKeyRequestInfoDto  requestInfo)
     {
         var response = await _httpClient.PostAsJsonAsync("api/keys/get-room-key", requestInfo);
-        return await response.Content.ReadFromJsonAsync<Response<string>>();
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Response<string>>() ?? new Response<string> { Success = false, Message = "Empty response" };
+        }
+        return new Response<string> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
     public async Task<Response<object>> SaveRoomKey(RoomDto roomKeys)
     {
         var response = await _httpClient.PostAsJsonAsync("api/keys/create-room", roomKeys);
-        return await response.Content.ReadFromJsonAsync<Response<object>>();
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Response<object>>() ?? new Response<object> { Success = false, Message = "Empty response" };
+        }
+        return new Response<object> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
     public async Task<Response<object>> InitializeRoom(RoomDto room)
     {
         var response = await _httpClient.PutAsJsonAsync("api/keys/initialize-room-key", room);
-        return await response.Content.ReadFromJsonAsync<Response<object>>();
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Response<object>>() ?? new Response<object> { Success = false, Message = "Empty response" };
+        }
+        return new Response<object> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
     
     public async Task<Response<object>> SaveNewKeys(Guid publicId, IEnumerable<RoomKeyDataDto> keysData)

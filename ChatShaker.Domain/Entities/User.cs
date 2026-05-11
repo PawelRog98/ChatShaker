@@ -34,7 +34,7 @@ namespace ChatShaker.Domain.Entities
         public string? AccountInfo { get; set; }
         public DateTime CreatedAtUtc { get; set; }
         public DateTime? ModifiedAtUtc { get; set; }
-        public string UserInvitationCode { get; set; }
+        public string? UserInvitationCode { get; set; }
 
         public ICollection<Token> Tokens { get; set; }
         public ICollection<Suspension> Suspensions { get; set;}

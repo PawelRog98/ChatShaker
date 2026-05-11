@@ -53,7 +53,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
             CipherText = request.SendMessageDto.CipherText,
             Nonce = request.SendMessageDto.Nonce,
             SentAtUtc = DateTime.UtcNow,
-            ClientMessageId = request.SendMessageDto.ClientMessageId
+            ClientMessageId = request.SendMessageDto.ClientMessageId,
+            MessageType = request.SendMessageDto.MessageType
         };
 
         await _messageRepository.Add(message, cancellationToken);
@@ -82,7 +83,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
             Nonce = message.Nonce,
             SentAtUtc = message.SentAtUtc,
             ClientMessageId = message.ClientMessageId,
-            Status = Domain.Enums.MessageStatusEnum.Sent
+            Status = Domain.Enums.MessageStatusEnum.Sent,
+            MessageType = message.MessageType
         };
 
         await _chatNotifier.MessageSent(room.PublicId, messageDto, cancellationToken);

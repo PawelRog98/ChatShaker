@@ -69,6 +69,17 @@ public class SendMessageCommandHandlerTests
 
         var command = new SendMessageCommand(sendMessageDto, userId);
 
+        var sender = new User
+        {
+            Id = userId,
+            PublicId = Guid.NewGuid(),
+            FirstName = "SenderName"
+        };
+
+        _mockUserRepository
+            .Setup(r => r.GetUserById(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sender);
+
         _mockChatRoomRepository
             .Setup(r => r.GetByPublicId(roomPublicId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatRoom);

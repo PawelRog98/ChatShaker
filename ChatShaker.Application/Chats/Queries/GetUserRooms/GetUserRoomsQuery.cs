@@ -1,4 +1,5 @@
 using AutoMapper;
+using ChatShaker.Domain.Enums;
 using ChatShaker.Domain.Repositories;
 using MediatR;
 
@@ -57,8 +58,10 @@ public class GetUserRoomsQuery : IRequest<List<ChatListItemDto>>
                 {
                     RoomPublicId = room.PublicId,
                     LastMessagePreview = message != null ? message.CipherText : "",
+                    LastMessageNonce = message.Nonce,
+                    Type = message.MessageType,
                     LastMessageDate = message != null ? message.SentAtUtc : DateTime.UtcNow,
-                    Name = room?.Name,
+                    Name = room.TypeEnum == ChatRoomType.Group ? (room.Name ?? "Group Chat") : (room.ChatRoomMemberships.FirstOrDefault(x => x.UserId != request.UserId)?.User?.PublicNick ?? "Unknown"),
                     IsRead = isRead
                 };
 

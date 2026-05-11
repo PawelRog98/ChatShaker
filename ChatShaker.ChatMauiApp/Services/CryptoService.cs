@@ -25,41 +25,56 @@ public class CryptoService : ICryptoService
         _keyApiService = keyApiService;
     }
 
-    public Task<(string CipherMessageBase64, string NonceBase64)> EncryptMessage(byte[] roomKey, string plainText)
+    public async Task<(string CipherMessageBase64, string NonceBase64)> EncryptMessage(byte[] roomKey, string plainText)
+    {
+        var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+        var (cipherBytes, nonce) = await EncryptBytes(roomKey, plainTextBytes);
+        
+        return (Convert.ToBase64String(cipherBytes), Convert.ToBase64String(nonce));
+    }
+
+    public async Task<string> DecryptMessage(byte[] roomKey, string cipherMessageBase64, string nonceBase64)
+    {
+        var cipherBytes = Convert.FromBase64String(cipherMessageBase64);
+        var nonce = Convert.FromBase64String(nonceBase64);
+        
+        var plainBytes = await DecryptBytes(roomKey, cipherBytes, nonce);
+        return Encoding.UTF8.GetString(plainBytes);
+    }
+
+    public Task<(byte[] CipherBytes, byte[] Nonce)> EncryptBytes(byte[] roomKey, byte[] plainBytes)
     {
         var nonce = RandomNumberGenerator.GetBytes(12);
-        var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
         var cipher = new GcmBlockCipher(new AesEngine());
         var parameters = new AeadParameters(new KeyParameter(roomKey), 128, nonce);
         cipher.Init(true, parameters);
 
-        var cipherTextBytes = new byte[cipher.GetOutputSize(plainTextBytes.Length)];
-        var len = cipher.ProcessBytes(plainTextBytes, 0, plainTextBytes.Length, cipherTextBytes, 0);
+        var cipherTextBytes = new byte[cipher.GetOutputSize(plainBytes.Length)];
+        var len = cipher.ProcessBytes(plainBytes, 0, plainBytes.Length, cipherTextBytes, 0);
         len += cipher.DoFinal(cipherTextBytes, len);
 
-        var cipherText = Convert.ToBase64String(cipherTextBytes, 0, len);
-        var nonceBase64 = Convert.ToBase64String(nonce);
-
-        return Task.FromResult((cipherText, nonceBase64));
+        return Task.FromResult((cipherTextBytes, nonce));
     }
 
-    public Task<string> DecryptMessage(byte[] roomKey, string cipherMessageBase64, string nonceBase64)
+    public Task<byte[]> DecryptBytes(byte[] roomKey, byte[] cipherBytes, byte[] nonce)
     {
-        var combined = Convert.FromBase64String(cipherMessageBase64);
-        var nonce = Convert.FromBase64String(nonceBase64);
-
         var cipher = new GcmBlockCipher(new AesEngine());
         var parameters = new AeadParameters(new KeyParameter(roomKey), 128, nonce);
         cipher.Init(false, parameters);
+        
+        var plainBytes = new byte[cipher.GetOutputSize(cipherBytes.Length)];
+        var len = cipher.ProcessBytes(cipherBytes, 0, cipherBytes.Length, plainBytes, 0);
+        len += cipher.DoFinal(plainBytes, len);
 
-        var plainTextBytes = new byte[cipher.GetOutputSize(combined.Length)];
-        var len = cipher.ProcessBytes(combined, 0, combined.Length, plainTextBytes, 0);
-        len += cipher.DoFinal(plainTextBytes, len);
-
-        var textToReturn = Encoding.UTF8.GetString(plainTextBytes, 0, len);
-
-        return Task.FromResult(textToReturn);
+        if (len < plainBytes.Length)
+        {
+            var trimmedBytes = new byte[len];
+            Buffer.BlockCopy(plainBytes, 0, trimmedBytes, 0, len);
+            return Task.FromResult(trimmedBytes);
+        }
+        
+        return Task.FromResult(plainBytes);
     }
 
     public Task<string> EncryptRoomKey(byte[] roomKey, byte[] recipientPublicKeyBytes)
@@ -140,7 +155,7 @@ public class CryptoService : ICryptoService
 
     public async Task SaveIdentityKey(string userId)
     {
-        var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey+userId);
+        var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey + userId);
         if (existingKey != null)
             return;
 
@@ -151,8 +166,8 @@ public class CryptoService : ICryptoService
         var privateKey = ((X25519PrivateKeyParameters)keyPair.Private).GetEncoded();
         var publicKey = ((X25519PublicKeyParameters)keyPair.Public).GetEncoded();
 
-        await SecureStorage.SetAsync(PrivateIdentityKeyKey+userId, Convert.ToBase64String(privateKey));
-        await SecureStorage.SetAsync(PublicIdentityKeyKey+userId, Convert.ToBase64String(publicKey));
+        await SecureStorage.SetAsync(PrivateIdentityKeyKey + userId, Convert.ToBase64String(privateKey));
+        await SecureStorage.SetAsync(PublicIdentityKeyKey + userId, Convert.ToBase64String(publicKey));
         
         var newUserKeyData = new UserKeyDataDto{
             PublicKey = Convert.ToBase64String(publicKey),

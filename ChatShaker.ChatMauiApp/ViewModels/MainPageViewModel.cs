@@ -48,7 +48,11 @@ public class MainPageViewModel : BaseViewModel, INavigationAware
     private async Task Logout()
     {
         await _authTokenProvider.ClearTokens();
-        await _navigationService.NavigateAsync("LoginPage");
+        var navResult = await _navigationService.NavigateAsync("/LoginPage");
+        if (!navResult.Success)
+        {
+            System.Diagnostics.Debug.WriteLine($"Logout navigation failed: {navResult.Exception?.Message}");
+        }
     }
 
     public void OnNavigatedFrom(INavigationParameters parameters)

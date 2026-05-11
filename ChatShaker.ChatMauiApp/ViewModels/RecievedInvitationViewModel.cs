@@ -7,7 +7,7 @@ using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class RecievedInvitationViewModel : BaseViewModel, INavigationAware, IRegionAware
+public class RecievedInvitationViewModel : BaseViewModel, IRegionAware
 {
     private readonly IFriendshipApiService _friendshipApiService;
     private readonly IAppPopupService _popupService;
@@ -80,15 +80,6 @@ public class RecievedInvitationViewModel : BaseViewModel, INavigationAware, IReg
         {
             IsBusy = false;
         }
-    }
-
-    public void OnNavigatedFrom(INavigationParameters parameters)
-    {
-    }
-
-    public async void OnNavigatedTo(INavigationParameters parameters)
-    {
-        await LoadRecievedInvitations();
     }
 
     public bool IsNavigationTarget(NavigationContext navigationContext) => true;

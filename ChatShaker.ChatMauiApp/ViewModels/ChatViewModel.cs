@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Models.Enums;
+using ChatShaker.ChatMauiApp.Models.Local;
 using ChatShaker.ChatMauiApp.Services.Api;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
+using Microsoft.Maui.Graphics.Platform;
 using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
@@ -16,6 +19,15 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         get { return _ongoingText; }
         set { SetProperty(ref _ongoingText, value); }
     }
+
+    private string _selectedImagePath;
+
+    public string SelectedImagePath
+    {
+        get {  return _selectedImagePath; }
+        set { SetProperty(ref _selectedImagePath, value); }
+    }
+
     #endregion
     
     private readonly IChatConnectionService _chatHub;
@@ -27,6 +39,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
     private readonly ICryptoService _cryptoService;
     private readonly IAuthTokenProvider _authTokenProvider;
     private readonly IAppPopupService _popupService;
+    private readonly IImageService _imageService;
     
     public ChatHistoryViewModel History { get; }
 
@@ -35,6 +48,9 @@ public class ChatViewModel : BaseViewModel, IRegionAware
 
     public DelegateCommand SendMessageCommand { get;}
     public DelegateCommand LoadMoreCommand { get;}
+    public DelegateCommand PickImageCommand { get; }
+    public DelegateCommand ClearImageCommand { get; }
+    public DelegateCommand<MessageDto> OpenImageCommand { get; }
     
     public ObservableCollection<MessageDto> Messages { get; } = new();
 
@@ -47,6 +63,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         ICryptoService cryptoService,
         IAuthTokenProvider authTokenProvider,
         IAppPopupService popupService,
+        IImageService imageService,
         ChatHistoryViewModel history)
     {
         _chatHub = chatHub;
@@ -58,55 +75,196 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         _cryptoService = cryptoService;
         _authTokenProvider = authTokenProvider;
         _popupService = popupService;
+        _imageService = imageService;
         
         History = history;
 
-        SendMessageCommand = new DelegateCommand(SendMessage);
-        LoadMoreCommand = new DelegateCommand(LoadMore);
-        
+        SendMessageCommand = new DelegateCommand(SendMessage, () => !IsBusy).ObservesProperty(() => IsBusy);
+        LoadMoreCommand = new DelegateCommand(LoadMore, () => !IsBusy).ObservesProperty(() => IsBusy);
+        PickImageCommand = new DelegateCommand(PickImage, () => !IsBusy).ObservesProperty(() => IsBusy);
+        ClearImageCommand = new DelegateCommand(ClearImage);
+        OpenImageCommand = new DelegateCommand<MessageDto>(OpenImage);
+    }
+
+    private void SubscribeEvents()
+    {
+        UnsubscribeEvents();
         _chatHub.OnMessageSent += OnMessageSent;
         _chatHub.OMessageDelivered += OnMessageDelivered;
         _chatHub.OnMessageRead += OnMessageRead;
         History.OnMessageLoaded += OnMessagesLoaded;
     }
 
-    private async void SendMessage()
+    private void UnsubscribeEvents()
     {
+        _chatHub.OnMessageSent -= OnMessageSent;
+        _chatHub.OMessageDelivered -= OnMessageDelivered;
+        _chatHub.OnMessageRead -= OnMessageRead;
+        History.OnMessageLoaded -= OnMessagesLoaded;
+    }
+
+    private void ClearImage()
+    {
+        SelectedImagePath = null;
+    }
+
+    private async void OpenImage(MessageDto message)
+    {
+        if (message.MessageType != MessageTypeEnum.Image || message.ImageContent == null)
+            return;
+
+        if (IsBusy) return;
+
         try
         {
-            if (string.IsNullOrWhiteSpace(OngoingText))
-                return;
+            IsBusy = true;
+            if (string.IsNullOrEmpty(message.FullImageLocalPath))
+            {
+                message.IsDownloadingFullImage = true;
+                message.FullImageLocalPath = await LoadImageToFile(message.ImageContent.FilePublicId);
+            }
 
-            var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, OngoingText);
+            // In a real app, navigate to full image viewer
+            await _popupService.ShowError($"Full image available at: {message.FullImageLocalPath}");
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError($"Failed to download full image: {ex.Message}");
+        }
+        finally
+        {
+            message.IsDownloadingFullImage = false;
+            IsBusy = false;
+        }
+    }
+
+    private async Task<string> LoadImageToFile(string publicIdStr)
+    {
+        var publicId = Guid.Parse(publicIdStr);
+        var bytes = await _chatDataService.GetDecryptedFile(_roomId, publicId);
+        
+        var localPath = Path.Combine(FileSystem.CacheDirectory, $"{publicIdStr}.jpg");
+        await File.WriteAllBytesAsync(localPath, bytes);
+        
+        return localPath;
+    }
+
+    private async void SendMessage()
+    {
+        if (IsBusy) return;
+
+        if (string.IsNullOrWhiteSpace(OngoingText) && string.IsNullOrEmpty(SelectedImagePath))
+            return;
+
+        IsBusy = true;
+        try
+        {
+            string encryptedMessageContent;
+            string nonceData;
+            MessageTypeEnum messageType;
+
+            var currentImagePath = SelectedImagePath;
+            var currentText = OngoingText;
+
+            if (!string.IsNullOrWhiteSpace(currentImagePath))
+            {
+                var newName = Guid.NewGuid().ToString();
+                
+                var thumbBytes = await _imageService.GenerateThumbnail(currentImagePath);
+                var thumbId = await _chatDataService.SaveEncryptedFile(_roomId, thumbBytes, "thumb_"+newName, "image/jpeg");
+                
+                var imageBytes = await File.ReadAllBytesAsync(currentImagePath);
+                var fullImageId = await _chatDataService.SaveEncryptedFile(_roomId, imageBytes, newName, "image/jpeg");
+
+                var imageContent = new ImageMessageContent
+                {
+                    FilePublicId = fullImageId,
+                    ThumbnailPublicId = thumbId,
+                    Text = currentText ?? ""
+                };
+                
+                var jsonString = JsonSerializer.Serialize(imageContent);
+                var (cipher, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, jsonString);
+
+                encryptedMessageContent = cipher;
+                nonceData = nonce;
+                messageType = MessageTypeEnum.Image;
+            }
+            else
+            {
+                var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, currentText);
+                encryptedMessageContent = encryptedText;
+                nonceData = nonce;
+                messageType = MessageTypeEnum.Text;
+            }
 
             await _chatHub.SendMessage(new MessageDto
             {
-                CipherText = encryptedText,
-                Nonce = nonce,
+                CipherText = encryptedMessageContent,
+                Nonce = nonceData,
                 ClientMessageId = Guid.NewGuid(),
                 ChatRoomPublicId = _roomId,
                 Status = MessageStatusEnum.Sent,
-                SentAtUtc = DateTime.UtcNow
+                SentAtUtc = DateTime.UtcNow,
+                MessageType = messageType
             });
 
-            OngoingText = string.Empty;
-            RaisePropertyChanged(nameof(OngoingText));
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                SelectedImagePath = null;
+                OngoingText = string.Empty;
+            });
         }
         catch (Exception ex)
         {
             await _popupService.ShowError($"Failed to send message: {ex.Message}");
         }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async void PickImage()
+    {
+        if (IsBusy) return;
+
+        try
+        {
+            IsBusy = true;
+            var result = await MediaPicker.Default.PickPhotoAsync();
+
+            if (result == null)
+                return;
+
+            SelectedImagePath = result.FullPath;
+        }
+        catch (Exception ex)
+        {
+            await _popupService.ShowError($"Failed to load image: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async void LoadMore()
     {
+        if (IsBusy) return;
+
         try
         {
+            IsBusy = true;
             await History.LoadMessages(_roomId);
         }
         catch (Exception ex)
         {
             await _popupService.ShowError($"Failed to load more messages: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
@@ -114,11 +272,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
     {
         try
         {
-            await Task.Run(async () =>
-            {
-                var roomKey = await _roomKeyService.GetRoomKey(_roomId);
-                message.CipherText = await _cryptoService.DecryptMessage(roomKey, message.CipherText, message.Nonce);
-            });
+            await ProcessMessage(message);
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
@@ -139,6 +293,33 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         {
             await _popupService.ShowError($"Error processing received message: {ex.Message}");
         }
+    }
+
+    private async Task ProcessMessage(MessageDto message, bool shouldDecrypt = true)
+    {
+        if (shouldDecrypt)
+        {
+            var roomKey = await _roomKeyService.GetRoomKey(_roomId);
+            message.CipherText = await _cryptoService.DecryptMessage(roomKey, message.CipherText, message.Nonce);
+        }
+
+        if (message.MessageType == MessageTypeEnum.Image)
+        {
+            try
+            {
+                message.ImageContent = JsonSerializer.Deserialize<ImageMessageContent>(message.CipherText);
+                if (message.ImageContent != null)
+                {
+                    message.ThumbnailLocalPath = await LoadImageToFile(message.ImageContent.ThumbnailPublicId);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _popupService.ShowError($"Error processing received message with deserialization: {ex.Message}");
+            }
+        }
+        
+        message.IsMine = message.SenderPublicId?.ToString() == _userId;
     }
 
     private void OnMessageRead(Guid messagePublicId)
@@ -167,19 +348,25 @@ public class ChatViewModel : BaseViewModel, IRegionAware
 
     private async void OnMessagesLoaded(IEnumerable<MessageDto> messages)
     {
+        var messageList = messages.ToList();
+        
+        foreach (var message in messageList)
+        {
+            await ProcessMessage(message, shouldDecrypt: false);
+        }
+
         MainThread.BeginInvokeOnMainThread(() => {
-            foreach(var message in messages)
+            foreach(var message in messageList)
             {
                 if (Messages.All(m => m.ClientMessageId != message.ClientMessageId))
                 {
-                    message.IsMine = message.SenderPublicId?.ToString() == _userId;
                     Messages.Insert(0, message);
                 }
             }
         });
 
         var userIdAsGuid = Guid.Parse(_userId);
-        var messagesUnred = messages.Where(x => x.Status != MessageStatusEnum.Read && x.SenderPublicId != userIdAsGuid).ToList();
+        var messagesUnred = messageList.Where(x => x.Status != MessageStatusEnum.Read && x.SenderPublicId != userIdAsGuid).ToList();
 
         foreach (var message in messagesUnred)
         {
@@ -203,20 +390,12 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         UnsubscribeEvents();
     }
 
-    private void UnsubscribeEvents()
-    {
-        _chatHub.OnMessageSent -= OnMessageSent;
-        _chatHub.OMessageDelivered -= OnMessageDelivered;
-        _chatHub.OnMessageRead -= OnMessageRead;
-        History.OnMessageLoaded -= OnMessagesLoaded;
-    }
-
     public async void OnNavigatedTo(NavigationContext navigationContext)
     {
         IsBusy = true;
         try
         {
-            await Task.Run(async () => await InternalOnNavigatedTo(navigationContext.Parameters));
+            await InternalOnNavigatedTo(navigationContext.Parameters);
         }
         finally
         {
@@ -229,7 +408,8 @@ public class ChatViewModel : BaseViewModel, IRegionAware
     private async Task InternalOnNavigatedTo(INavigationParameters parameters)
     {
         _roomId = parameters.GetValue<Guid>("RoomId");
-        _userId = _authTokenProvider.GetAuthToken().Result.UserId;
+        var token = await _authTokenProvider.GetAuthToken();
+        _userId = token.UserId;
         
         var isInitialized = await _roomApiService.CheckIfRoomInitialized(_roomId);
         if (isInitialized.Data != true)
@@ -244,6 +424,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         
         History.Reset();
         
+        SubscribeEvents();
         _chatHub.BindEvents();
         await History.LoadMessages(_roomId);
     }

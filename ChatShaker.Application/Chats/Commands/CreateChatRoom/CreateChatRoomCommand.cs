@@ -1,4 +1,5 @@
 using ChatShaker.Domain.Entities;
+using ChatShaker.Domain.Enums;
 using ChatShaker.Domain.Repositories;
 using ChatShaker.Domain.Services;
 using MediatR;
@@ -52,7 +53,8 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
                 Name = request.ChatRoomDto.Name,
                 HostId = host.Id,
                 CreatedAtUtc = DateTime.UtcNow,
-                IsInitialized = true
+                IsInitialized = true,
+                TypeEnum = ChatRoomType.Group
             };
 
             await _chatRoomRepository.Add(room, cancellationToken);
@@ -70,7 +72,8 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
                     UserId = userToAdd.Id,
                     ChatRoomId = room.Id,
                     EncryptedRoomKey = userData.EncryptedUserKey,
-                    CreatedAtUtc = DateTime.UtcNow
+                    CreatedAtUtc = DateTime.UtcNow,
+                    DeviceId = userData.DeviceId
                 };
 
                 var newMembership = new ChatRoomMembership

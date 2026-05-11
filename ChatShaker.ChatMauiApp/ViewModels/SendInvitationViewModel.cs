@@ -2,11 +2,11 @@ using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
 using Prism.Commands;
-using Prism.Navigation;
+using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class SendInvitationViewModel : BaseViewModel, INavigationAware
+public class SendInvitationViewModel : BaseViewModel, IRegionAware
 {
     #region Properties
 
@@ -91,13 +91,15 @@ public class SendInvitationViewModel : BaseViewModel, INavigationAware
         }
     }
 
-    public void OnNavigatedFrom(INavigationParameters parameters)
+    public void OnNavigatedFrom(NavigationContext navigationContext)
     {
         
     }
 
-    public async void OnNavigatedTo(INavigationParameters parameters)
+    public async void OnNavigatedTo(NavigationContext navigationContext)
     {
         await LoadSentInvitations();
     }
+
+    public bool IsNavigationTarget(NavigationContext navigationContext) => true;
 }

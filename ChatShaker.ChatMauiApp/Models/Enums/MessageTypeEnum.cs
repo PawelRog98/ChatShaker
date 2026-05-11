@@ -1,4 +1,4 @@
-namespace ChatShaker.Domain.Enums;
+namespace ChatShaker.ChatMauiApp.Models.Enums;
 
 public enum MessageTypeEnum : byte
 {

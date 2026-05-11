@@ -91,6 +91,8 @@ namespace ChatShaker.Api
                 var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
                 await seeder.Seed();
             }
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

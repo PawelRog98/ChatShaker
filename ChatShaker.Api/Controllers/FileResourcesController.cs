@@ -22,7 +22,7 @@ public class FileResourcesController : ControllerBase
     [HttpPost("upload")]
     [ProducesResponseType(typeof(Response<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Upload([FromBody] UploadedFileDto fileData, CancellationToken cancellationToken)
+    public async Task<IActionResult> Upload([FromForm] UploadedFileDto fileData, CancellationToken cancellationToken)
     {
         if(fileData.File == null ||  fileData.File.Length == 0)
             return BadRequest("File is empty");

@@ -86,7 +86,11 @@ namespace ChatShaker.ChatMauiApp.ViewModels
                 if (result.Success)
                 {
                     await _cryptoService.SaveIdentityKey(result.Data.UserId);
-                    await _navigationService.NavigateAsync("/MainView");
+                    var navResult = await _navigationService.NavigateAsync("/MainView");
+                    if (!navResult.Success)
+                    {
+                        await _popupService.ShowError($"Navigation failed: {navResult.Exception?.Message}");
+                    }
                 }
             }
             catch (Exception ex)

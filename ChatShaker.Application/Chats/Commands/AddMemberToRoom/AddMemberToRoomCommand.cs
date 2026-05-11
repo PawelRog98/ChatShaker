@@ -67,7 +67,8 @@ public class AddMemeberToRoomCommandHandler : IRequestHandler<AddMemberToRoomCom
             {
                 ChatRoomId = room.Id,
                 UserId = userToAdd.Id,
-                EncryptedRoomKey = request.AddMemberToRoomDto.EncryptedKey
+                EncryptedRoomKey = request.AddMemberToRoomDto.EncryptedKey,
+                DeviceId = request.AddMemberToRoomDto.DeviceId
             };
 
             await _chatRoomKeyBlobRepository.Add(chatBlob, cancellationToken);

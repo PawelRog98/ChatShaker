@@ -23,6 +23,8 @@ public class ChatRoomRepository : IChatRoomRepository
     {
         return await _context.ChatRoomMemberships
             .Include(x => x.ChatRoom)
+            .ThenInclude(x => x.ChatRoomMemberships)
+            .ThenInclude(x => x.User)
             .Where(x => x.UserId == userId)
             .Select(x => x.ChatRoom)
             .ToListAsync(cancellationToken);

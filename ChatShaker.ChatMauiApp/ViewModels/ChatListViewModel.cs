@@ -1,6 +1,7 @@
 
 using System.Collections.ObjectModel;
 using ChatShaker.ChatMauiApp.Models.Dto;
+using ChatShaker.ChatMauiApp.Models.Enums;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
 using Prism.Commands;
 using Prism.Navigation;
@@ -8,7 +9,7 @@ using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
 
-public class ChatListViewModel : BindableBase, INavigatedAware
+public class ChatListViewModel : BindableBase, IRegionAware
 {
     private string _name;
     public string Name
@@ -22,6 +23,7 @@ public class ChatListViewModel : BindableBase, INavigatedAware
     private readonly INavigationService _navigationService;
     private readonly IChatConnectionService _chatConnectionService;
     private readonly IAppPopupService _popupService;
+    private readonly IChatDataService _chatDataService;
     private readonly IRegionManager _regionManager;
 
     private CancellationTokenSource _cancellationToken;
@@ -34,6 +36,7 @@ public class ChatListViewModel : BindableBase, INavigatedAware
         INavigationService navigationService, 
         IChatConnectionService chatConnectionService,
         IAppPopupService popupService,
+        IChatDataService chatDataService,
         IRegionManager regionManager)
     {
         _roomApiService = roomApiService;
@@ -41,12 +44,13 @@ public class ChatListViewModel : BindableBase, INavigatedAware
         _navigationService = navigationService;
         _chatConnectionService = chatConnectionService;
         _popupService = popupService;
+        _chatDataService = chatDataService;
         _regionManager = regionManager;
 
         OpenChatCommand = new DelegateCommand<ChatListItem>(OpenChat);
     }
 
-    public async void OnNavigatedTo(INavigationParameters parameters)
+    public async void OnNavigatedTo(NavigationContext navigationContext)
     {
         try
         {
@@ -60,6 +64,18 @@ public class ChatListViewModel : BindableBase, INavigatedAware
     
             foreach (var room in rooms)
             {
+                if (room.Type == MessageTypeEnum.Text)
+                {
+                    var decryptedMessage = await _chatDataService.GetDecryptedMessage(room.RoomPublicId,
+                        room.LastMessagePreview, room.LastMessageNonce);
+
+                    room.LastMessagePreview = decryptedMessage;
+                }
+                else
+                {
+                    room.LastMessagePreview = "File";
+                }
+
                 Chats.Add(room);
                 await _chatConnectionService.JoinRoom(room.RoomPublicId);
             }
@@ -70,10 +86,12 @@ public class ChatListViewModel : BindableBase, INavigatedAware
         }
     }
 
-    public void OnNavigatedFrom(INavigationParameters parameters)
+    public void OnNavigatedFrom(NavigationContext navigationContext)
     {
         _cancellationToken?.Cancel();
     }
+
+    public bool IsNavigationTarget(NavigationContext navigationContext) => true;
 
     private async Task<List<ChatListItem>> GetRoomItems()
     {

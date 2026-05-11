@@ -69,17 +69,31 @@
                                            FontSize="14" 
                                            TextColor="{StaticResource Gray600}" 
                                            MaxLines="1" 
-                                           LineBreakMode="TailTruncation" />
+                                           LineBreakMode="TailTruncation">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsRead}" Value="False">
+                                                <Setter Property="FontAttributes" Value="Bold" />
+                                                <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
                                 </StackLayout>
 
                                 <StackLayout Grid.Column="2" VerticalOptions="Center" HorizontalOptions="End" Spacing="4">
-                                    <Label Text="12:45" 
+                                    <Label Text="{Binding LastMessageDate, StringFormat='{0:HH:mm}'}" 
                                            FontSize="12" 
                                            TextColor="{StaticResource Gray400}" />
                                     <Ellipse WidthRequest="10" 
                                              HeightRequest="10" 
                                              Fill="{StaticResource Primary}" 
-                                             HorizontalOptions="End" />
+                                             HorizontalOptions="End" 
+                                             IsVisible="False">
+                                        <Ellipse.Triggers>
+                                            <DataTrigger TargetType="Ellipse" Binding="{Binding IsRead}" Value="False">
+                                                <Setter Property="IsVisible" Value="True" />
+                                            </DataTrigger>
+                                        </Ellipse.Triggers>
+                                    </Ellipse>
                                 </StackLayout>
                             </Grid>
                         

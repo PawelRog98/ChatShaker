@@ -27,6 +27,7 @@ namespace ChatShaker.ChatMauiApp
                         container.Register<IRoomApiService, RoomsApiService>();
                         container.Register<IFriendshipApiService, FriendshipApiService>();
                         container.Register<IUserApiService, UserApiService>();
+                        container.Register<IFileApiService, FileApiService>();
                         
                         container.Register<IAuthTokenProvider, AuthTokenProvider>();
                         container.Register<IAuthService, AuthService>();
@@ -37,6 +38,7 @@ namespace ChatShaker.ChatMauiApp
                         container.Register<IGlobalConnectionService, GlobalConnectionService>();
                         container.Register<IRoomKeyService, RoomKeyService>();
                         container.Register<IChatDataService, ChatDataService>();
+                        container.Register<IImageService, ImageService>();
                         container.Register<ChatHistoryViewModel>();
 
                         container.RegisterForNavigation<SplashPage, SplashPageViewModel>();

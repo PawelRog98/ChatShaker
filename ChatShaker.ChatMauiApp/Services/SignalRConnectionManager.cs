@@ -19,10 +19,14 @@ public class SignalRConnectionManager : ISignalRConnectionManager, IDisposable
 
     public async Task Connect(CancellationToken cancellationToken)
     {
+        if (_connection != null && _connection.State != HubConnectionState.Disconnected)
+            return;
+
         var token = await _authService.GetAccessToken();
         
         
 #if ANDROID
+        // Use 10.0.2.2 for Android emulator. For physical devices, use the host machine's IP.
         var hubUrl = "http://10.0.2.2:8080/chatHub";
 #else
         var hubUrl = "http://localhost:8080/chatHub";

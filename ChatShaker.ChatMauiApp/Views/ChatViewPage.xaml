@@ -56,13 +56,43 @@
                                         </Label.Triggers>
                                     </Label>
                                     
+                                    <Border IsVisible="False" 
+                                            StrokeThickness="0"
+                                            Margin="0,0,0,4">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8" />
+                                        </Border.StrokeShape>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding MessageType}" Value="Image">
+                                                <Setter Property="IsVisible" Value="True" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        
+                                        <Image Source="{Binding ThumbnailLocalPath}"
+                                               Aspect="AspectFill"
+                                               HeightRequest="200"
+                                               WidthRequest="200">
+                                            <Image.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ChatViewModel}}, Path=OpenImageCommand}"
+                                                                      CommandParameter="{Binding .}" />
+                                            </Image.GestureRecognizers>
+                                        </Image>
+                                    </Border>
+
                                     <Label FontSize="15" 
                                            TextColor="Black"
-                                           Text="{Binding CipherText}">
+                                           Text="{Binding DisplayText}">
                                         <Label.Triggers>
                                             <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
                                                 <Setter Property="TextColor" Value="White" />
                                             </DataTrigger>
+                                            <MultiTrigger TargetType="Label">
+                                                <MultiTrigger.Conditions>
+                                                    <BindingCondition Binding="{Binding MessageType}" Value="Image" />
+                                                    <BindingCondition Binding="{Binding DisplayText}" Value="{x:Null}" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </MultiTrigger>
                                         </Label.Triggers>
                                     </Label>
 
@@ -93,22 +123,62 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
             
-            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,8,0,0" HeightRequest="50">
-                <Border StrokeThickness="1" 
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,8,0,0" VerticalOptions="End">
+                <Button Grid.Column="0"
+                        Text="📎"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        VerticalOptions="End"
+                        Margin="0,0,0,4"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"
+                        FontSize="24"
+                        Padding="0"
+                        Command="{Binding PickImageCommand}"/>
+                
+                <Border Grid.Column="1" 
+                        StrokeThickness="1" 
                         Stroke="{StaticResource Gray300}" 
-                        Padding="15,0" 
-                        StrokeShape="RoundRectangle 25">
-                    <Entry 
-                        Text="{Binding OngoingText}" 
-                        Placeholder="Write your message..."
-                        VerticalOptions="Center" />
+                        Padding="12,2" 
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="White">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid HorizontalOptions="Start" Margin="0,8,0,4">
+                            <Grid.Triggers>
+                                <DataTrigger TargetType="Grid" Binding="{Binding SelectedImagePath}" Value="{x:Null}">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Grid" Binding="{Binding SelectedImagePath}" Value="">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Grid.Triggers>
+                            
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="100" HeightRequest="100">
+                                <Image Source="{Binding SelectedImagePath}" Aspect="AspectFill" />
+                            </Border>
+                            
+                            <Button Text="✕" 
+                                    Command="{Binding ClearImageCommand}"
+                                    HorizontalOptions="End" VerticalOptions="Start"
+                                    TranslationX="8" TranslationY="-8"
+                                    WidthRequest="22" HeightRequest="22" CornerRadius="11"
+                                    Padding="0" BackgroundColor="{StaticResource Gray500}" TextColor="White" FontSize="12" />
+                        </Grid>
+
+                        <Entry 
+                            Text="{Binding OngoingText}" 
+                            Placeholder="Write your message..."
+                            VerticalOptions="Center"
+                            HeightRequest="44" />
+                    </VerticalStackLayout>
                 </Border>
                 
-                <Button Grid.Column="1"
+                <Button Grid.Column="2"
                         Text="Send"
-                        CornerRadius="25"
+                        CornerRadius="24"
+                        HeightRequest="48"
+                        VerticalOptions="End"
                         Command="{Binding SendMessageCommand}" 
-                        Margin="8,0,0,0"
                         Padding="20,0"/>
             </Grid>
         </Grid>

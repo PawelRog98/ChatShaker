@@ -12,4 +12,5 @@ public class MessageDto
     public DateTime SentAtUtc { get; set; }
     public Guid ClientMessageId { get; set; }
     public MessageStatusEnum Status { get; set; }
+    public MessageTypeEnum MessageType { get; set; }
 }

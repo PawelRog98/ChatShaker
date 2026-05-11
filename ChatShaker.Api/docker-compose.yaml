@@ -12,6 +12,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_LOGGING__CONSOLE__LOGLEVEL__DEFAULT: Debug
+    volumes:
+      - api-storage:/app/Storage/Files
     depends_on:
       - mssql
       - redis
@@ -41,3 +43,4 @@ services:
 volumes:
   sql-data:
   redis-data:
+  api-storage:

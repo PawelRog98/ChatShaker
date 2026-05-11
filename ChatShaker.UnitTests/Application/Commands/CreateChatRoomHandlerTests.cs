@@ -42,22 +42,24 @@ public class CreateChatRoomHandlerTests
         {
             new UserEncryptionDto
             {
-                PublicId = hostPublicId,
+                UserId = hostPublicId,
                 EncryptedUserKey = Guid.NewGuid().ToString(),
-                isHost = true
+                IsHost = true,
+                DeviceId = "device1"
             },
             new UserEncryptionDto
             {
-                PublicId = secondUserPublicId,
+                UserId = secondUserPublicId,
                 EncryptedUserKey = Guid.NewGuid().ToString(),
-                isHost = false
+                IsHost = false,
+                DeviceId = "device2"
             }
         };
         var createChatRoomDto = new CreateChatRoomDto
         {
             Name = "Room1",
             CreatedAtUtc = DateTime.UtcNow,
-            Users = usersDtos
+            Keys = usersDtos
         };
 
         var hostData = new User
@@ -95,10 +97,10 @@ public class CreateChatRoomHandlerTests
 
         var cancellationToken = new CancellationToken();
 
-        var command = new CreateChatRoomCommand(createChatRoomDto);
+        var command = new CreateChatRoomCommand(createChatRoomDto, hostData.Id);
 
         _mockUserRepository
-            .Setup(r => r.GetUserByPublicId(It.IsAny<Guid>(), cancellationToken))
+            .Setup(r => r.GetUserById(It.IsAny<long>(), cancellationToken))
             .ReturnsAsync(hostData);
 
         _mockUserRepository
@@ -135,7 +137,7 @@ public class CreateChatRoomHandlerTests
         act.Should().NotBeEmpty();
 
         _mockUserRepository
-            .Verify(u => u.GetUserByPublicId(It.IsAny<Guid>(), cancellationToken), Times.Once);
+            .Verify(u => u.GetUserById(It.IsAny<long>(), cancellationToken), Times.Once);
         _mockUserRepository
             .Verify(u => u.GetUsersByPublicId(It.IsAny<List<Guid>>(), cancellationToken), Times.Once);
 
