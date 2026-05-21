@@ -32,7 +32,7 @@
                                HorizontalOptions="Center"
                                TextColor="{StaticResource Primary}" />
 
-                        <Label Text="Join our community today"
+                        <Label Text="Join our chat today"
                                FontSize="16"
                                HorizontalOptions="Center"
                                TextColor="{StaticResource Gray500}"

@@ -24,7 +24,7 @@
                 </Border.Shadow>
 
                 <VerticalStackLayout Spacing="20">
-                    <Label Text="Welcome Back"
+                    <Label Text="Welcome to chat"
                            FontSize="28"
                            FontAttributes="Bold"
                            HorizontalOptions="Center"

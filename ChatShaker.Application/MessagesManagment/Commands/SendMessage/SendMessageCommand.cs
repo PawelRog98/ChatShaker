@@ -67,7 +67,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
             UpdateAtUtc = DateTime.UtcNow
         };
 
-        await _messageRepository.SaveStatus(messageStatus, cancellationToken);
+        await _messageRepository.AddStatus(messageStatus, cancellationToken);
         await _unitOfWork.Commit(cancellationToken);
 
         var sender = await _userRepository.GetUserById(request.UserId, cancellationToken);

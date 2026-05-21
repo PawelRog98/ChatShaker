@@ -113,7 +113,8 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         if (message.MessageType != MessageTypeEnum.Image || message.ImageContent == null)
             return;
 
-        if (IsBusy) return;
+        if (IsBusy) 
+            return;
 
         try
         {
@@ -124,8 +125,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
                 message.FullImageLocalPath = await LoadImageToFile(message.ImageContent.FilePublicId);
             }
 
-            // In a real app, navigate to full image viewer
-            await _popupService.ShowError($"Full image available at: {message.FullImageLocalPath}");
+            await _popupService.ShowImage(message.FullImageLocalPath);
         }
         catch (Exception ex)
         {
@@ -396,6 +396,10 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         try
         {
             await InternalOnNavigatedTo(navigationContext.Parameters);
+        }
+        catch (Exception ex)
+        {
+            throw;
         }
         finally
         {

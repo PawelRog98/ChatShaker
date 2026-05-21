@@ -14,7 +14,7 @@ public class FriendRequestRepository : IFriendRequestRepository
         _context = context;
     }
 
-    public async Task SaveRequest(FriendRequest request, CancellationToken cancellationToken)
+    public async Task Add(FriendRequest request, CancellationToken cancellationToken)
     {
         await _context.FriendRequests.AddAsync(request);
     }

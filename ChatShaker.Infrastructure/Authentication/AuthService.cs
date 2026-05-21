@@ -50,7 +50,7 @@ namespace ChatShaker.Infrastructure.Authentication
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var refreshToken = await CreateRefreshToken(user.Id, cancellationToken);
+            var refreshToken = await CreateToken(user.Id, TokenType.RefreshToken, DateTime.UtcNow.AddDays(30), Guid.NewGuid().ToString(), cancellationToken);
 
             var accessToken = tokenHandler.WriteToken(token);
 
@@ -63,17 +63,18 @@ namespace ChatShaker.Infrastructure.Authentication
             };
         }
 
-        private async Task<Token> CreateRefreshToken(long userId, CancellationToken cancellationToken)
+        public async Task<Token> CreateToken(long userId, TokenType tokenType, DateTime expireDateUtc, string tokenData, CancellationToken cancellationToken)
         {
             var token = new Token
             {
-                TokenData = Guid.NewGuid().ToString(),
-                ExpireDateTime = DateTime.UtcNow.AddDays(30),
-                TokenType = TokenType.RefreshToken,
+                TokenData = tokenData,
+                ExpireDateTime = expireDateUtc,
+                TokenType = tokenType,
+                CreatedDateUtc = DateTime.UtcNow,
                 UserId = userId
             };
 
-            await _tokenRepository.CreateToken(token, cancellationToken);
+            await _tokenRepository.Add(token, cancellationToken);
             return token;
 
         }

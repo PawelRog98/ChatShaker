@@ -26,28 +26,40 @@ namespace ChatShaker.Application.Users.Commands.Refresh
         private readonly IAuthService _authService;
         private readonly ITokenRepository _tokenRepository;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RefreshCommandHandler(IAuthService authService, IMapper mapper, ITokenRepository tokenRepository)
+        public RefreshCommandHandler(IAuthService authService, IMapper mapper, ITokenRepository tokenRepository, IUnitOfWork unitOfWork)
         {
             _authService = authService;
             _mapper = mapper;
             _tokenRepository = tokenRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<AuthTokenDto> Handle(RefreshCommand refreshCommand, CancellationToken cancellationToken)
         {
-            var token = await _tokenRepository.GetTokenDataWithUser(refreshCommand.RefreshToken, cancellationToken);
-            if (token == null)
-                throw new BadAuthenticationException("Token is expired");
+            try
+            {
+                await _unitOfWork.BeginTransaction(cancellationToken);
+                var token = await _tokenRepository.GetTokenDataWithUser(refreshCommand.RefreshToken, cancellationToken);
+                if (token == null)
+                    throw new BadAuthenticationException("Token is expired");
 
-            var user = token.User;
+                var user = token.User;
 
-            await _tokenRepository.DeleteToken(token, cancellationToken);
+                await _tokenRepository.DeleteToken(token, cancellationToken);
 
-            var accessTokenResult = await _authService.GenerateJwtToken(user, cancellationToken);
+                var accessTokenResult = await _authService.GenerateJwtToken(user, cancellationToken);
 
-            var tokenResult = _mapper.Map<AuthTokenDto>(accessTokenResult);
-            return tokenResult;
+                await _unitOfWork.Commit(cancellationToken);
+                var tokenResult = _mapper.Map<AuthTokenDto>(accessTokenResult);
+                return tokenResult;
+            }
+            catch (Exception)
+            {
+                await _unitOfWork.Rollback(cancellationToken);
+                throw;
+            }
         }
     }
 }

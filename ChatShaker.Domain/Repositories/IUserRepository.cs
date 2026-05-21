@@ -15,7 +15,8 @@ namespace ChatShaker.Domain.Repositories
         Task<User?> GetUserByCode(string invitationCode, CancellationToken cancellationToken);
         Task<IEnumerable<User>> GetUsersByPublicId(List<Guid> publicIds, CancellationToken cancellationToken);
         Task<bool> IsAnyUsers(CancellationToken cancellationToken);
-        Task SaveNewUser(User user, CancellationToken cancellationToken);
+        Task Add(User user, CancellationToken cancellationToken);
         Task<List<User>> GetFriends(long userId, CancellationToken cancellationToken);
+        Task<bool> IsConfirmed(long userId, CancellationToken cancellationToken);
     }
 }

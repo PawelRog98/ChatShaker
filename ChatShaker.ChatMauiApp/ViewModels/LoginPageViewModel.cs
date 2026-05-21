@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChatShaker.ChatMauiApp.Services.Api;
 
 namespace ChatShaker.ChatMauiApp.ViewModels
 {
@@ -15,6 +16,7 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IAppPopupService _popupService;
         private readonly ICryptoService _cryptoService;
+        private readonly IUserApiService _userApiService;
 
         #region Properties
         private string _email;
@@ -50,12 +52,13 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         public DelegateCommand LoginCommand { get; set; }
         public DelegateCommand MoveToRegisterCommand { get; set; }
 
-        public LoginPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService, ICryptoService cryptoService)
+        public LoginPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService, ICryptoService cryptoService, IUserApiService userApiService)
         {
             _authService = authService;
             _navigationService = navigationService;
             _popupService = popupService;
             _cryptoService = cryptoService;
+            _userApiService = userApiService;
 
             LoginCommand = new DelegateCommand(async () => await  Login());
             MoveToRegisterCommand = new DelegateCommand(async () => await MoveToRegister());
@@ -82,11 +85,23 @@ namespace ChatShaker.ChatMauiApp.ViewModels
                 }
 
                 var result = await _authService.Login(loginDto);
-
+                
                 if (result.Success)
                 {
                     await _cryptoService.SaveIdentityKey(result.Data.UserId);
                     var navResult = await _navigationService.NavigateAsync("/MainView");
+                    if (!navResult.Success)
+                    {
+                        await _popupService.ShowError($"Navigation failed: {navResult.Exception?.Message}");
+                    }
+                }
+                else if (result.Errors.Contains("Email is not confirmed."))
+                {
+                    var parameters = new NavigationParameters
+                    {
+                        { "Email", Email }
+                    };
+                    var navResult = await _navigationService.NavigateAsync("/ConfirmationAccountPage", parameters);
                     if (!navResult.Success)
                     {
                         await _popupService.ShowError($"Navigation failed: {navResult.Exception?.Message}");

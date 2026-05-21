@@ -12,7 +12,7 @@
                            HeightRequest="60" 
                            WidthRequest="60" />
         
-        <Label Text="Loading secure session..."
+        <Label Text="Loading session..."
                FontSize="16"
                TextColor="White"
                FontAttributes="Italic"

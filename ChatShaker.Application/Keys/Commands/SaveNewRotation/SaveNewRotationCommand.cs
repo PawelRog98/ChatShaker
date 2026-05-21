@@ -59,7 +59,7 @@ public class SaveNewRotationCommandHandler : IRequestHandler<SaveNewRotationComm
                 });
             }
             
-            await _chatRoomKeyBlobRepository.SaveNewRotation(newKeys, cancellationToken);
+            await _chatRoomKeyBlobRepository.AddRange(newKeys, cancellationToken);
             await _unitOfWork.Commit(cancellationToken);
             
             return Unit.Value;

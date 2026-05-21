@@ -11,6 +11,7 @@ namespace ChatShaker.ChatMauiApp.Services.Interfaces
     {
         Task ShowError(string message);
         Task ShowSuccess(string message);
+        Task ShowImage(string imagePath);
         Task<Popup> ShowLoading(string message);
     }
 }

@@ -17,8 +17,17 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
+using Hangfire;
+using Hangfire.Common;
+using Hangfire.States;
 
 namespace ChatShaker.IntegrationTests.Fixtures;
+
+public class DummyBackgroundJobClient : IBackgroundJobClient
+{
+    public string Create(Job job, IState state) => "";
+    public bool ChangeState(string jobId, IState state, string expectedState) => true;
+}
 
 public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
 {
@@ -37,6 +46,7 @@ public class IntegrationTestsWebAppFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices((context, services) =>
         {
+            services.AddScoped<IBackgroundJobClient, DummyBackgroundJobClient>();
             var config = context.Configuration;
             var conn = config.GetConnectionString("DefaultConnection");
 

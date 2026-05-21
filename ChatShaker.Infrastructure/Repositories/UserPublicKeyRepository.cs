@@ -14,7 +14,7 @@ public class UserPublicKeyRepository : IUserPublicKeyRepository
         _context = context;
     }
 
-    public async Task SaveIdentity(UserPublicKey userPublicKey, CancellationToken cancellationToken)
+    public async Task Add(UserPublicKey userPublicKey, CancellationToken cancellationToken)
     {
         await _context.UserPublicKeys.AddAsync(userPublicKey);
     }

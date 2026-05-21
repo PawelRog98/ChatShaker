@@ -19,7 +19,7 @@ public class MessageStatusRepository : IMessageStatusRepository
             .FirstOrDefaultAsync(x => x.MessageId == messageId && x.UserId == userId, cancellationToken);
     }
 
-    public async Task SetStatus(MessageStatus status, CancellationToken cancellationToken)
+    public async Task Add(MessageStatus status, CancellationToken cancellationToken)
     {
         await _context.MessageStatuses.AddAsync(status, cancellationToken);
     }

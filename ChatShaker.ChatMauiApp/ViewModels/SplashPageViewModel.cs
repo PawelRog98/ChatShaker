@@ -1,4 +1,5 @@
-﻿using ChatShaker.ChatMauiApp.Services.Interfaces;
+﻿using ChatShaker.ChatMauiApp.Services.Api;
+using ChatShaker.ChatMauiApp.Services.Interfaces;
 using Prism.Navigation.Regions;
 using Prism.Navigation;
 
@@ -9,12 +10,14 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         private readonly IAuthService _authService;
         private readonly INavigationService _navigationService;
         private readonly IAppPopupService _popupService;
+        private readonly IUserApiService _userApiService;
 
-        public SplashPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService) 
+        public SplashPageViewModel(IAuthService authService, INavigationService navigationService, IAppPopupService popupService,  IUserApiService userApiService) 
         { 
             _authService = authService;
             _navigationService = navigationService;
             _popupService = popupService;
+            _userApiService = userApiService;
         }
 
         public void OnNavigatedFrom(INavigationParameters parameters)

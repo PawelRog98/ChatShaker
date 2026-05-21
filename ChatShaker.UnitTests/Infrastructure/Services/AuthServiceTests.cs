@@ -48,7 +48,7 @@ public class AuthServiceTests : IClassFixture<AuthFixture>
 
 
         _authFixture.TokenRepository
-            .Setup(t => t.CreateToken(It.IsAny<Token>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.Add(It.IsAny<Token>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var act = await _authService.GenerateJwtToken(user, CancellationToken.None);
@@ -56,6 +56,6 @@ public class AuthServiceTests : IClassFixture<AuthFixture>
         act.Should().NotBeNull();
 
         _authFixture.TokenRepository
-            .Verify(t => t.CreateToken(It.IsAny<Token>(), It.IsAny<CancellationToken>()), Times.Once);
+            .Verify(t => t.Add(It.IsAny<Token>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

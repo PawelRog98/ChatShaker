@@ -31,7 +31,7 @@ public class MessageRepository : IMessageRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task SaveStatus(MessageStatus messageStatus, CancellationToken cancellationToken)
+    public async Task AddStatus(MessageStatus messageStatus, CancellationToken cancellationToken)
     {
         await _context.MessageStatuses
             .AddAsync(messageStatus, cancellationToken);

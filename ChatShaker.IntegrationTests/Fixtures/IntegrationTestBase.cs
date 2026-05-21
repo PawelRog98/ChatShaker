@@ -55,8 +55,8 @@ public class IntegrationTestBase : IClassFixture<IntegrationTestsWebAppFactory>,
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM Tokens");
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM ChatRoomMemberships");
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM ChatRoomKeyBlobs");
-        await Context.Database.ExecuteSqlRawAsync("DELETE FROM ChatRooms");
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM Messages");
+        await Context.Database.ExecuteSqlRawAsync("DELETE FROM ChatRooms");
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM Users");
         await Context.Database.ExecuteSqlRawAsync("DELETE FROM Roles");
 

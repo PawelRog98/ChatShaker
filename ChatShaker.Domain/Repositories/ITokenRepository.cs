@@ -9,8 +9,11 @@ namespace ChatShaker.Domain.Repositories
 {
     public interface ITokenRepository
     {
-        Task CreateToken(Token token, CancellationToken cancellationToken);
+        Task Add(Token token, CancellationToken cancellationToken);
         Task<Token?> GetTokenDataWithUser(string token, CancellationToken cancellationToken);
         Task DeleteToken(Token token, CancellationToken cancellationToken);
+
+        Task<Token?> GetActualActivationTokenForUser(string token, string email, CancellationToken cancellationToken);
+        Task DeleteExpiredTokens(CancellationToken cancellationToken);
     }
 }

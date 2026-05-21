@@ -58,8 +58,8 @@ public class GetUserRoomsQuery : IRequest<List<ChatListItemDto>>
                 {
                     RoomPublicId = room.PublicId,
                     LastMessagePreview = message != null ? message.CipherText : "",
-                    LastMessageNonce = message.Nonce,
-                    Type = message.MessageType,
+                    LastMessageNonce = message != null ? message.Nonce : "",
+                    Type = message != null ? message.MessageType : Domain.Enums.MessageTypeEnum.Text,
                     LastMessageDate = message != null ? message.SentAtUtc : DateTime.UtcNow,
                     Name = room.TypeEnum == ChatRoomType.Group ? (room.Name ?? "Group Chat") : (room.ChatRoomMemberships.FirstOrDefault(x => x.UserId != request.UserId)?.User?.PublicNick ?? "Unknown"),
                     IsRead = isRead

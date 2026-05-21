@@ -28,6 +28,7 @@ namespace ChatShaker.ChatMauiApp
                         container.Register<IFriendshipApiService, FriendshipApiService>();
                         container.Register<IUserApiService, UserApiService>();
                         container.Register<IFileApiService, FileApiService>();
+                        container.Register<ITokenApiService, TokenApiService>();
                         
                         container.Register<IAuthTokenProvider, AuthTokenProvider>();
                         container.Register<IAuthService, AuthService>();
@@ -44,6 +45,7 @@ namespace ChatShaker.ChatMauiApp
                         container.RegisterForNavigation<SplashPage, SplashPageViewModel>();
                         container.RegisterForNavigation<LoginPage, LoginPageViewModel>();
                         container.RegisterForNavigation<RegisterPage,  RegisterPageViewModel>();
+                        container.RegisterForNavigation<ConfirmationAccountPage, ActivationAccountViewModel>();
                         container.RegisterForRegionNavigation<ChatViewPage, ChatViewModel>("ChatRoomPage");
                         container.RegisterForRegionNavigation<ChatListPage, ChatListViewModel>();
                         container.RegisterForNavigation<MainView, MainPageViewModel>();

@@ -87,7 +87,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
                 CreatedAtUtc = DateTime.UtcNow
             };
             
-            await _friendshipRepository.SaveFriendship(friendship, cancellationToken);
+            await _friendshipRepository.Add(friendship, cancellationToken);
 
             var chatRoom = new ChatRoom
             {

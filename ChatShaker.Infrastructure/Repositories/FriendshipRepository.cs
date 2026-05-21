@@ -13,7 +13,7 @@ public class FriendshipRepository :  IFriendshipRepository
         _context = context;
     }
 
-    public async Task SaveFriendship(Friendship friendship, CancellationToken cancellationToken)
+    public async Task Add(Friendship friendship, CancellationToken cancellationToken)
     {
         await _context.Friendships.AddAsync(friendship, cancellationToken);
     }

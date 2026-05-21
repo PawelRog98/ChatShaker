@@ -41,7 +41,7 @@ public class SaveIdentityCommandHandler : IRequestHandler<SaveIdentityCommand, U
                 CreatedAtUtc = DateTime.UtcNow
             };
 
-            await _userPublicKeyRepository.SaveIdentity(userIdentity, cancellationToken);
+            await _userPublicKeyRepository.Add(userIdentity, cancellationToken);
             
             await _unitOfWork.Commit(cancellationToken);
             

@@ -61,7 +61,7 @@ public class MarkMessageAsReadCommandHandler : IRequestHandler<MarkMessageAsRead
                 Status = Domain.Enums.MessageStatusEnum.Read,
                 UpdateAtUtc = DateTime.UtcNow
             };
-            await _messageStatusRepository.SetStatus(status, cancellationToken);
+            await _messageStatusRepository.Add(status, cancellationToken);
         }
         else if (status.Status < Domain.Enums.MessageStatusEnum.Read)
         {

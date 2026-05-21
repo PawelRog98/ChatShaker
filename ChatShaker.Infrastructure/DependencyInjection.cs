@@ -23,7 +23,12 @@ using ChatShaker.Domain.Serivces;
 using ChatShaker.Domain.Services;
 using ChatShaker.Infrastructure.ChatRoomServices;
 using ChatShaker.Infrastructure.FileManagement;
+using ChatShaker.Infrastructure.Jobs;
+using ChatShaker.Application.Jobs.Abstraction;
+using ChatShaker.Infrastructure.Email.Smtp;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ChatShaker.Domain.Models.Email;
 
 namespace ChatShaker.Infrastructure
 {
@@ -31,12 +36,17 @@ namespace ChatShaker.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
+            var emailSettings = new EmailSettings();
+            configuration.GetSection("EmailConfiguration").Bind(emailSettings);
+            services.AddSingleton(emailSettings);
+
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<IEncryptionService, EncryptionService>();
             services.AddScoped<ICodeGenerationService, CodeGenerationService>();
+            services.AddScoped<IEmailService, SmtpEmailService>();
             
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
@@ -111,18 +121,49 @@ namespace ChatShaker.Infrastructure
                     options.InstanceName = "AppCacheData_";
                 });
 
-                services.AddHangfire(conf =>
+                /*services.AddHangfire(conf =>
                     conf.UseRedisStorage(redis, new RedisStorageOptions
                     {
                         Prefix = "app_hangfire:",
                         InvisibilityTimeout = TimeSpan.FromMinutes(10)
-                    }));
-
+                    }));*/
+                
                 var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+                services.AddHangfire(conf =>
+                    conf.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                        .UseSimpleAssemblyNameTypeSerializer()
+                        .UseRecommendedSerializerSettings()
+                        .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+                        {
+                            CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                            SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                            QueuePollInterval = TimeSpan.Zero,
+                            UseRecommendedIsolationLevel = true,
+                            DisableGlobalLocks = true
+                        }));
+                
+                services.AddHangfireServer(options =>
+                    {
+                        options.WorkerCount = Environment.ProcessorCount * 5;
+                    });
+                    
                 services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString).LogTo(Console.WriteLine));
                 services.AddDatabaseDeveloperPageExceptionFilter();
             }
+            #endregion
+
+            #region Jobs
+
+            services.Scan(scan => scan
+                .FromAssembliesOf(typeof(IRecurringJob))
+                .AddClasses(classes => classes.AssignableTo<IRecurringJob>())
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
+            services.AddSingleton<RecurringJobRegistrar>();
+
             #endregion
 
             return services;

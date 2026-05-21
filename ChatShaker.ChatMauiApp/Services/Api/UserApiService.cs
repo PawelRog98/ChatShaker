@@ -27,4 +27,6 @@ public class UserApiService : IUserApiService
         var response = await _httpClient.GetFromJsonAsync<Response<List<UserKeyDataDto>>>(uri);
 
         return response;
-    }}
+    }
+}
+    

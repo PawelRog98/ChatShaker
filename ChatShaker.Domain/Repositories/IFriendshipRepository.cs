@@ -4,5 +4,5 @@ namespace ChatShaker.Domain.Repositories;
 
 public interface IFriendshipRepository
 {
-    Task SaveFriendship(Friendship friendship, CancellationToken cancellationToken);
+    Task Add(Friendship friendship, CancellationToken cancellationToken);
 }

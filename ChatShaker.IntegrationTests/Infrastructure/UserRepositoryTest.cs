@@ -31,7 +31,8 @@ public class UserRepositoryTest : IntegrationTestBase
             CreatedAtUtc = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             ModifiedAtUtc = null
         };
-        await repository.SaveNewUser(user, CancellationToken.None);
+        await repository.Add(user, CancellationToken.None);
+        await Context.SaveChangesAsync();
 
         var allUsers2 = await Context.Users.ToListAsync();
 

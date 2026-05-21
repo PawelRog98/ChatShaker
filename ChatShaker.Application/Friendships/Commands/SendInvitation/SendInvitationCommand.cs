@@ -55,7 +55,7 @@ public class SendInvitationCommandHandler : IRequestHandler<SendInvitationComman
                 Status = FriendRequestStatus.Pending
             };
 
-            await _friendRequestRepository.SaveRequest(friendRequest, cancellationToken);
+            await _friendRequestRepository.Add(friendRequest, cancellationToken);
             await _unitOfWork.Commit(cancellationToken);
             return Unit.Value;
         }

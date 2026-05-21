@@ -90,6 +90,7 @@ public static class TestDataSeeder
                 UserId = user.Id,
                 TokenData = Convert.ToHexString(RandomNumberGenerator.GetBytes(64)),
                 ExpireDateTime = DateTime.UtcNow.AddHours(3),
+                CreatedDateUtc =  DateTime.UtcNow,
                 TokenType = TokenType.ActivationToken
             };
 

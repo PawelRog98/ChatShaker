@@ -61,7 +61,7 @@ public class MarkMessageAsDeliveredCommandHandler : IRequestHandler<MarkMessageA
                 Status = Domain.Enums.MessageStatusEnum.Delivered,
                 UpdateAtUtc = DateTime.UtcNow
             };
-            await _messageStatusRepository.SetStatus(status, cancellationToken);
+            await _messageStatusRepository.Add(status, cancellationToken);
         }
         else if (status.Status < Domain.Enums.MessageStatusEnum.Delivered)
         {

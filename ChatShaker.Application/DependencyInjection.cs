@@ -1,4 +1,6 @@
 ﻿using ChatShaker.Application.Common.Behaviors;
+using ChatShaker.Application.Jobs.Triggered;
+using ChatShaker.Application.Jobs.Triggered.Interfaces;
 using ChatShaker.Application.Mapping;
 using ChatShaker.Application.Users.Commands.Login;
 using FluentValidation;
@@ -16,6 +18,8 @@ namespace ChatShaker.Application
                 cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
+
+            services.AddScoped<ISendVerificationCodeJob, SendVerificationCodeJob>();
 
             services.AddAutoMapper(typeof(MappingProfile).Assembly);
 

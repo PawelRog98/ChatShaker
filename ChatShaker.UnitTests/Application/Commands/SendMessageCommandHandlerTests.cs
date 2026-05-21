@@ -101,7 +101,7 @@ public class SendMessageCommandHandlerTests
         };
 
         _mockMessageRepository
-            .Setup(r => r.SaveStatus(messageStatus, It.IsAny<CancellationToken>()));
+            .Setup(r => r.AddStatus(It.IsAny<MessageStatus>(), It.IsAny<CancellationToken>()));
 
         var cancellationToken = new CancellationToken();
 
@@ -114,8 +114,7 @@ public class SendMessageCommandHandlerTests
 
         _mockChatRoomRepository.Verify(c => c.GetByPublicId(roomPublicId, It.IsAny<CancellationToken>()), Times.Once);
         _mockMessageRepository.Verify(c => c.Add(It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockMessageRepository.Verify(c => c.SaveStatus(It.Is<MessageStatus>(s =>
-            s.Status == Domain.Enums.MessageStatusEnum.Sent),
+        _mockMessageRepository.Verify(c => c.AddStatus(It.IsAny<MessageStatus>(),
             It.IsAny<CancellationToken>()), Times.Once);
 
         _mockChatNotifier.Verify(c => c.MessageSent(

@@ -19,6 +19,7 @@ public class LoginCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher<User>> _passwordHasherMock;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly LoginCommandHandler _handler;
 
     public LoginCommandHandlerTests()
@@ -27,11 +28,13 @@ public class LoginCommandHandlerTests
         _mapperMock = new Mock<IMapper>();
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher<User>>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
         _handler = new LoginCommandHandler(
             _authServiceMock.Object,
             _mapperMock.Object,
             _userRepositoryMock.Object,
-            _passwordHasherMock.Object
+            _passwordHasherMock.Object,
+            _unitOfWorkMock.Object
             );
     }
 
@@ -110,6 +113,8 @@ public class LoginCommandHandlerTests
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
         _passwordHasherMock.Verify(p => p.VerifyHashedPassword(user, user.PasswordHash, loginCommand.Login.Password), Times.Once());
         _authServiceMock.Verify(a => a.GenerateJwtToken(user, It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.BeginTransaction(It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.Commit(It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [Fact]
@@ -127,7 +132,7 @@ public class LoginCommandHandlerTests
 
         _userRepositoryMock
             .Setup(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User)null);
+            .ReturnsAsync((User?)null);
 
         var act = async () => await _handler.Handle(loginCommand, CancellationToken.None);
 
@@ -135,6 +140,8 @@ public class LoginCommandHandlerTests
             .WithMessage("Invalid user data.");
 
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.BeginTransaction(It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.Rollback(It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [Fact]
@@ -181,6 +188,8 @@ public class LoginCommandHandlerTests
 
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
         _passwordHasherMock.Verify(p => p.VerifyHashedPassword(user, user.PasswordHash, loginCommand.Login.Password), Times.Once());
+        _unitOfWorkMock.Verify(u => u.BeginTransaction(It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.Rollback(It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [Fact]
@@ -221,6 +230,8 @@ public class LoginCommandHandlerTests
         await act.Should().ThrowAsync<NotActiveUserException>();
 
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.BeginTransaction(It.IsAny<CancellationToken>()), Times.Once());
+        _unitOfWorkMock.Verify(u => u.Rollback(It.IsAny<CancellationToken>()), Times.Once());
     }
 
 }

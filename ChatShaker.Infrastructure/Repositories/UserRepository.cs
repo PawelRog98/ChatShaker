@@ -55,11 +55,9 @@ namespace ChatShaker.Infrastructure.Repositories
             return await _context.Users.AnyAsync(cancellationToken);
         }
 
-        public async Task SaveNewUser(User user, CancellationToken cancellationToken)
+        public async Task Add(User user, CancellationToken cancellationToken)
         {
             await _context.AddAsync(user, cancellationToken);
-            var result = await _context.SaveChangesAsync(cancellationToken);
-            Console.WriteLine("SaveChanges result: " + result);
         }
 
         public async Task<List<User>> GetFriends(long userId, CancellationToken cancellationToken)
@@ -68,6 +66,11 @@ namespace ChatShaker.Infrastructure.Repositories
                 .Where(x=>x.User1Id == userId ||  x.User2Id == userId)
                 .Select(x=>x.User1Id == userId ? x.User2 :  x.User1)
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsConfirmed(long userId, CancellationToken cancellationToken)
+        {
+            return await _context.Users.AnyAsync(x => x.Id == userId && x.IsEmailConfirmed == true, cancellationToken);
         }
     }
 }

@@ -29,6 +29,15 @@ namespace ChatShaker.ChatMauiApp.Services
             });
         }
 
+        public async Task ShowImage(string imagePath)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                var popup = new ImagePopupPage(imagePath);
+                await Application.Current.MainPage.ShowPopupAsync(popup);
+            });
+        }
+
         public async Task<Popup> ShowLoading(string message)
         {
             return await MainThread.InvokeOnMainThreadAsync(async () =>
