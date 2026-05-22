@@ -193,7 +193,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_UnconfirmedEmail_ThrowsNotActiveUserException()
+    public async Task Handle_UnconfirmedEmail_ThrowsBadAuthenticationException()
     {
         #region DataInitialize
         var loginDto = new LoginDto
@@ -227,7 +227,8 @@ public class LoginCommandHandlerTests
 
         var act = async () => await _handler.Handle(loginCommand, CancellationToken.None);
 
-        await act.Should().ThrowAsync<NotActiveUserException>();
+        await act.Should().ThrowAsync<BadAuthenticationException>()
+            .WithMessage("Email is not confirmed.");
 
         _userRepositoryMock.Verify(r => r.GetUserByEmail(loginCommand.Login.Email, It.IsAny<CancellationToken>()), Times.Once());
         _unitOfWorkMock.Verify(u => u.BeginTransaction(It.IsAny<CancellationToken>()), Times.Once());
