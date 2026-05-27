@@ -95,6 +95,15 @@ public static class TestDataSeeder
             };
 
             await context.Tokens.AddAsync(verificationToken);
+
+            var userPublicKey = new UserPublicKey
+            {
+                UserId = user.Id,
+                PublicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqGKukO1De7zhZj6P6dfeGkm91",
+                DeviceId = "test-device",
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            await context.UserPublicKeys.AddAsync(userPublicKey);
         }
 
         await context.SaveChangesAsync();

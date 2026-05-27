@@ -92,6 +92,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         _chatHub.OnMessageSent += OnMessageSent;
         _chatHub.OMessageDelivered += OnMessageDelivered;
         _chatHub.OnMessageRead += OnMessageRead;
+        _chatHub.OnUserIdentityChanged += OnUserIdentityChanged;
         History.OnMessageLoaded += OnMessagesLoaded;
     }
 
@@ -100,7 +101,13 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         _chatHub.OnMessageSent -= OnMessageSent;
         _chatHub.OMessageDelivered -= OnMessageDelivered;
         _chatHub.OnMessageRead -= OnMessageRead;
+        _chatHub.OnUserIdentityChanged -= OnUserIdentityChanged;
         History.OnMessageLoaded -= OnMessagesLoaded;
+    }
+
+    private async void OnUserIdentityChanged(Guid userPublicId)
+    {
+        await _popupService.ShowSuccess("One of the participants has changed their security keys. Future messages will be encrypted using the new keys.");
     }
 
     private void ClearImage()
@@ -122,7 +129,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
             if (string.IsNullOrEmpty(message.FullImageLocalPath))
             {
                 message.IsDownloadingFullImage = true;
-                message.FullImageLocalPath = await LoadImageToFile(message.ImageContent.FilePublicId);
+                message.FullImageLocalPath = await LoadImageToFile(message.ImageContent.FilePublicId, message.KeyVersion);
             }
 
             await _popupService.ShowImage(message.FullImageLocalPath);
@@ -138,10 +145,10 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         }
     }
 
-    private async Task<string> LoadImageToFile(string publicIdStr)
+    private async Task<string> LoadImageToFile(string publicIdStr, long keyVersion)
     {
         var publicId = Guid.Parse(publicIdStr);
-        var bytes = await _chatDataService.GetDecryptedFile(_roomId, publicId);
+        var bytes = await _chatDataService.GetDecryptedFile(_roomId, publicId, keyVersion);
         
         var localPath = Path.Combine(FileSystem.CacheDirectory, $"{publicIdStr}.jpg");
         await File.WriteAllBytesAsync(localPath, bytes);
@@ -159,6 +166,13 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         IsBusy = true;
         try
         {
+            var currentKeyVersion = await _roomApiService.GetKeyVersion(_roomId);
+
+            if (!currentKeyVersion.Success)
+            {
+                await _popupService.ShowError($"Failed to get key version: {currentKeyVersion.Message}");
+            }
+            
             string encryptedMessageContent;
             string nonceData;
             MessageTypeEnum messageType;
@@ -171,20 +185,21 @@ public class ChatViewModel : BaseViewModel, IRegionAware
                 var newName = Guid.NewGuid().ToString();
                 
                 var thumbBytes = await _imageService.GenerateThumbnail(currentImagePath);
-                var thumbId = await _chatDataService.SaveEncryptedFile(_roomId, thumbBytes, "thumb_"+newName, "image/jpeg");
+                var thumbId = await _chatDataService.SaveEncryptedFile(_roomId, thumbBytes, "thumb_"+newName, "image/jpeg", currentKeyVersion.Data);
                 
                 var imageBytes = await File.ReadAllBytesAsync(currentImagePath);
-                var fullImageId = await _chatDataService.SaveEncryptedFile(_roomId, imageBytes, newName, "image/jpeg");
+                var fullImageId = await _chatDataService.SaveEncryptedFile(_roomId, imageBytes, newName, "image/jpeg", currentKeyVersion.Data);
 
                 var imageContent = new ImageMessageContent
                 {
                     FilePublicId = fullImageId,
                     ThumbnailPublicId = thumbId,
-                    Text = currentText ?? ""
+                    Text = currentText ?? "",
+                    KeyVersion =  currentKeyVersion.Data,
                 };
                 
                 var jsonString = JsonSerializer.Serialize(imageContent);
-                var (cipher, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, jsonString);
+                var (cipher, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, jsonString, currentKeyVersion.Data);
 
                 encryptedMessageContent = cipher;
                 nonceData = nonce;
@@ -192,7 +207,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
             }
             else
             {
-                var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, currentText);
+                var (encryptedText, nonce) = await _chatDataService.SaveEncryptedMessage(_roomId, currentText, currentKeyVersion.Data);
                 encryptedMessageContent = encryptedText;
                 nonceData = nonce;
                 messageType = MessageTypeEnum.Text;
@@ -206,7 +221,8 @@ public class ChatViewModel : BaseViewModel, IRegionAware
                 ChatRoomPublicId = _roomId,
                 Status = MessageStatusEnum.Sent,
                 SentAtUtc = DateTime.UtcNow,
-                MessageType = messageType
+                MessageType = messageType,
+                KeyVersion = currentKeyVersion.Data
             });
 
             await MainThread.InvokeOnMainThreadAsync(() =>
@@ -299,7 +315,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
     {
         if (shouldDecrypt)
         {
-            var roomKey = await _roomKeyService.GetRoomKey(_roomId);
+            var roomKey = await _roomKeyService.GetRoomKey(_roomId, message.KeyVersion);
             message.CipherText = await _cryptoService.DecryptMessage(roomKey, message.CipherText, message.Nonce);
         }
 
@@ -310,7 +326,7 @@ public class ChatViewModel : BaseViewModel, IRegionAware
                 message.ImageContent = JsonSerializer.Deserialize<ImageMessageContent>(message.CipherText);
                 if (message.ImageContent != null)
                 {
-                    message.ThumbnailLocalPath = await LoadImageToFile(message.ImageContent.ThumbnailPublicId);
+                    message.ThumbnailLocalPath = await LoadImageToFile(message.ImageContent.ThumbnailPublicId, message.KeyVersion);
                 }
             }
             catch (Exception ex)
@@ -379,6 +395,9 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         var response =  await _roomApiService.GetRoom(_roomId);
 
         var room = response.Data;
+
+        await CheckAndRotateKey(room);
+        
         var keys = room.ChatRoomKeyBlobDtos.Select(x => x.UserPublicId).ToList();
         var usersData = await _userApiService.GetParticipants(keys);
         
@@ -431,5 +450,24 @@ public class ChatViewModel : BaseViewModel, IRegionAware
         SubscribeEvents();
         _chatHub.BindEvents();
         await History.LoadMessages(_roomId);
+    }
+
+    private async Task CheckAndRotateKey(RoomDto room)
+    {
+        var latestKey = room.ChatRoomKeyBlobDtos.OrderByDescending(x => x.Version).FirstOrDefault();
+        if (latestKey == null)
+            return;
+
+        if ((DateTime.UtcNow - latestKey.CreatedAtUtc).TotalDays >= 30)
+        {
+            try
+            {
+                await _roomKeyService.SyncAndRotateKey(_roomId);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
     }
 }

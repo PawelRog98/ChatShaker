@@ -8,4 +8,5 @@ public interface IChatClient
     Task MessageDelivered(Guid messagePublicId);
     Task MessageRead(Guid messagePublicId);
     Task UserAdded(Guid userPublicId);
+    Task UserIdentityChanged(Guid userPublicId);
 }

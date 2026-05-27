@@ -8,8 +8,11 @@ public interface IChatConnectionService
     event Action<Guid>? OMessageDelivered;
     event Action<Guid>? OnMessageRead;
     event Action<Guid>? OnUserAdded;
+    event Action<Guid>? OnUserIdentityChanged;
 
     void BindEvents();
+
+
     Task AddUser(Guid roomPublicId);
     Task SendMessage(MessageDto messageDto);
     Task JoinRoom(Guid roomPublicId);

@@ -78,11 +78,17 @@ namespace ChatShaker.ChatMauiApp
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddTransient<AuthHeaderHandler>();
             builder.Services.AddHttpClient("ShakerApiClient", client =>
             {
                 client.BaseAddress = new Uri("http://10.0.2.2:8080");
             })
             .AddHttpMessageHandler<AuthHeaderHandler>();
+
+            /*builder.Services.AddHttpClient("AuthClient", client =>
+            {
+                client.BaseAddress = new Uri("http://10.0.2.2:8080");
+            });*/
 
             return builder.Build();
         }

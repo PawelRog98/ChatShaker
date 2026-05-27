@@ -26,4 +26,23 @@ public class UserPublicKeyRepository : IUserPublicKeyRepository
             .Where(x => userIdentities.Contains(x.User.PublicId))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<UserPublicKey>> GetUserIdentitiesByUserId(long userId, CancellationToken cancellationToken)
+    {
+        return await _context.UserPublicKeys
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task Update(UserPublicKey userPublicKey, CancellationToken cancellationToken)
+    {
+        _context.UserPublicKeys.Update(userPublicKey);
+        return Task.CompletedTask;
+    }
+
+    public Task Remove(UserPublicKey userPublicKey, CancellationToken cancellationToken)
+    {
+        _context.UserPublicKeys.Remove(userPublicKey);
+        return Task.CompletedTask;
+    }
 }

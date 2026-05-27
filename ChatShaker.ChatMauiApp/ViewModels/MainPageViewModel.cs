@@ -4,7 +4,7 @@ using Prism.Navigation;
 using Prism.Navigation.Regions;
 
 namespace ChatShaker.ChatMauiApp.ViewModels;
-public class MainPageViewModel : BaseViewModel, INavigationAware
+public class MainPageViewModel : BaseViewModel, INavigationAware, IDestructible
 {
     private readonly IRegionManager _regionManager;
     private readonly INavigationService _navigationService;
@@ -64,6 +64,14 @@ public class MainPageViewModel : BaseViewModel, INavigationAware
         if (string.IsNullOrEmpty(CurrentView))
         {
             Navigate("ChatListPage");
+        }
+    }
+
+    public void Destroy()
+    {
+        if (_regionManager.Regions.ContainsRegionWithName("MainRegion"))
+        {
+            _regionManager.Regions.Remove("MainRegion");
         }
     }
 }

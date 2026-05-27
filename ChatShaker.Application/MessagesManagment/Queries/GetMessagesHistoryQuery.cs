@@ -26,19 +26,28 @@ public class GetMessagesHistoryQueryHandler : IRequestHandler<GetMessagesHistory
 {
     private readonly IMessageRepository _messageRepository;
     private readonly IChatRoomRepository _chatRoomRepository;
+    private readonly IChatRoomMembershipRepository _chatRoomMembershipRepository;
     private readonly IMapper _mapper;
 
-    public GetMessagesHistoryQueryHandler(IMessageRepository messageRepository,  IChatRoomRepository chatRoomRepository,  IMapper mapper)
+    public GetMessagesHistoryQueryHandler(IMessageRepository messageRepository,
+        IChatRoomRepository chatRoomRepository,
+        IChatRoomMembershipRepository chatRoomMembershipRepository,
+        IMapper mapper)
     {
         _messageRepository = messageRepository;
         _chatRoomRepository = chatRoomRepository;
+        _chatRoomMembershipRepository = chatRoomMembershipRepository;
         _mapper = mapper;
     }
     
     public async Task<IEnumerable<MessageDto>> Handle(GetMessagesHistoryQuery request, CancellationToken cancellationToken)
     {
         var room = await _chatRoomRepository.GetByPublicId(request.RoomPublicId, cancellationToken)
-                   ?? throw new BadRequestException("Not found that room");;
+                   ?? throw new BadRequestException("Not found that room");
+
+        var isMember = await _chatRoomMembershipRepository.Exists(room.Id, request.UserId, cancellationToken);
+        if (!isMember)
+            throw new ForbiddenException("You are not a member of this room");
         
         var messages =
             await _messageRepository.GetByRoom(room.Id, request.PageIndex, request.PageSize, cancellationToken);

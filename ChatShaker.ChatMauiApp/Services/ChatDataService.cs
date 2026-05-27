@@ -34,10 +34,9 @@ public class ChatDataService : IChatDataService
         if (items.Data == null || !items.Data.Any())
             return new List<MessageDto>();
 
-        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
-
         var decryptionTasks = items.Data.Select(async item =>
         {
+            var roomKey = await _roomKeyService.GetRoomKey(roomPublicId, item.KeyVersion);
             item.CipherText = await _cryptoService.DecryptMessage(roomKey, item.CipherText, item.Nonce);
         });
 
@@ -46,24 +45,24 @@ public class ChatDataService : IChatDataService
         return items.Data;
     }
 
-    public async Task<string> GetDecryptedMessage(Guid roomPublicId, string encryptedMessage, string nonce)
+    public async Task<string> GetDecryptedMessage(Guid roomPublicId, string encryptedMessage, string nonce, long keyVersion)
     {
-        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
+        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId, keyVersion);
         
         return await _cryptoService.DecryptMessage(roomKey, encryptedMessage, nonce);
     }
 
-    public async Task<(string, string)> SaveEncryptedMessage(Guid roomPublicId, string messageText)
+    public async Task<(string, string)> SaveEncryptedMessage(Guid roomPublicId, string messageText, long keyVersion)
     {
-        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
+        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId, keyVersion);
         var messageData = await _cryptoService.EncryptMessage(roomKey, messageText);
 
         return messageData;
     }
 
-    public async Task<string> SaveEncryptedFile(Guid roomPublicId, byte[] fileBytes, string fileName, string contentType)
+    public async Task<string> SaveEncryptedFile(Guid roomPublicId, byte[] fileBytes, string fileName, string contentType, long keyVersion)
     {
-        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
+        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId, keyVersion);
         var (cipherBytes, nonce) = await _cryptoService.EncryptBytes(roomKey, fileBytes);
         
         var combined = new byte[nonce.Length + cipherBytes.Length];
@@ -80,7 +79,7 @@ public class ChatDataService : IChatDataService
         throw new Exception(response.Message);
     }
 
-    public async Task<byte[]> GetDecryptedFile(Guid roomPublicId, Guid filePublicId)
+    public async Task<byte[]> GetDecryptedFile(Guid roomPublicId, Guid filePublicId, long keyVersion)
     {
         var fileStream = await _fileApiService.DownloadFile(filePublicId);
 
@@ -94,7 +93,7 @@ public class ChatDataService : IChatDataService
         Buffer.BlockCopy(combined, 0, nonce, 0, 12);
         Buffer.BlockCopy(combined, 12, cipher, 0, cipher.Length);
 
-        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId);
+        var roomKey = await _roomKeyService.GetRoomKey(roomPublicId, keyVersion);
         return await _cryptoService.DecryptBytes(roomKey, cipher, nonce);
     }
 }

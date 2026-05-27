@@ -18,7 +18,7 @@ namespace ChatShaker.ChatMauiApp.Services.Api
 
         public ApiService(IHttpClientFactory factory)
         {
-            _httpClient = factory.CreateClient("ShakerApiClient");
+            _httpClient = factory.CreateClient("AuthClient");
         }
 
         public async Task<Response<AuthData>> Login(LoginDto loginDto)

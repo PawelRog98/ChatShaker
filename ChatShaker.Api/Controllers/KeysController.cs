@@ -6,6 +6,7 @@ using ChatShaker.Application.Keys.Commands.SaveNewRotation;
 using ChatShaker.Application.Keys.GetRoomKey;
 using ChatShaker.Application.Users.Commands.SaveIdentity;
 using ChatShaker.Application.Users.Queries.GetIdentity;
+using ChatShaker.Application.Users.Commands.RemoveIdentity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,19 @@ public class KeysController :  ControllerBase
         
         await _mediator.Send(new SaveIdentityCommand(userKeyData, long.Parse(userId)));
         
+        return ApiResponse.Ok();
+    }
+
+    [HttpDelete("remove-identity/{deviceId}")]
+    public async Task<IActionResult> RemoveIdentity(string deviceId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.Forbidden("User not found");
+
+        await _mediator.Send(new RemoveIdentityCommand(deviceId, long.Parse(userId)));
+
         return ApiResponse.Ok();
     }
     
@@ -86,7 +100,12 @@ public class KeysController :  ControllerBase
     public async Task<IActionResult> RotateKeys(Guid publicId, [FromBody] List<RotationDto> rotateKeysReqestDto,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new SaveNewRotationCommand(publicId, rotateKeysReqestDto), cancellationToken);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.Forbidden("User not found");
+
+        var result = await _mediator.Send(new SaveNewRotationCommand(publicId, rotateKeysReqestDto, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result);
     }
@@ -97,7 +116,12 @@ public class KeysController :  ControllerBase
     public async Task<IActionResult> InitializeChat([FromBody] ChatRoomDto chatRoomDto,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto), cancellationToken);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.Forbidden("User not found");
+
+        var result = await _mediator.Send(new InitializeNewDirectChatCommand(chatRoomDto, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result);
     }

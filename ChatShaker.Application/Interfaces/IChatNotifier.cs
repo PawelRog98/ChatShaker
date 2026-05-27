@@ -8,4 +8,5 @@ public interface IChatNotifier
     Task MessageDelivered(Guid roomPublicId, Guid messagePublicId, CancellationToken cancellationToken);
     Task MessageRead(Guid roomPublicId, Guid messagePublicId, CancellationToken cancellationToken);
     Task UserAdded(Guid roomPublicId, Guid userPublicId, CancellationToken cancellationToken);
+    Task UserIdentityChanged(Guid userPublicId, CancellationToken cancellationToken);
 }

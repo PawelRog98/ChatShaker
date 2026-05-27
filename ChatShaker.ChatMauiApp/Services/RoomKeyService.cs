@@ -26,28 +26,40 @@ public class RoomKeyService : IRoomKeyService
     private byte[] GenerateRoomKey(int size=32)
         => RandomNumberGenerator.GetBytes(size);
     
-    public async Task<byte[]> GetRoomKey(Guid roomPublicId)
+    public async Task<byte[]> GetRoomKey(Guid roomPublicId, long? version = null)
     {
         try
         {
-            var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
-            if (roomVersion == null || !roomVersion.Success)
+            long roomKeyVersion;
+            if (version == null)
             {
-                throw new Exception($"Failed to get room key version: {roomVersion?.Message}");
+                var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
+                if (roomVersion == null || !roomVersion.Success)
+                {
+                    throw new Exception($"Failed to get room key version: {roomVersion?.Message}");
+                }
+                
+                roomKeyVersion = roomVersion.Data;
             }
+            else
+            {
+                roomKeyVersion = version.Value;
+            }
+            
 
-            var deviceId = $"{DeviceInfo.Current.VersionString}@{DeviceInfo.Current.Model}";
+            var deviceId = Preferences.Default.Get("UniqueDeviceId", string.Empty);
+            var fullDeviceId = $"{DeviceInfo.Current.Model}_{deviceId}";
 
             string roomKeyData = string.Empty;
             byte[] roomKey;
-            roomKeyData = await SecureStorage.GetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}");
+            roomKeyData = await SecureStorage.GetAsync($"{RoomKeyKey}_{roomPublicId}_{roomKeyVersion}");
 
             if (string.IsNullOrEmpty(roomKeyData))
             {
                 var roomKeyInfoRequest = new RoomKeyRequestInfoDto
                 {
-                    Version = roomVersion.Data,
-                    DeviceId = deviceId,
+                    Version = roomKeyVersion,
+                    DeviceId = fullDeviceId,
                     PublicId = roomPublicId
                 };
 
@@ -55,6 +67,11 @@ public class RoomKeyService : IRoomKeyService
                 if (roomKeyEncryptedData == null || !roomKeyEncryptedData.Success || string.IsNullOrEmpty(roomKeyEncryptedData.Data))
                 {
                     throw new Exception($"Failed to retrieve encrypted room key: {roomKeyEncryptedData?.Message}");
+                }
+
+                if (roomKeyEncryptedData.Data.Equals("Placeholder", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Array.Empty<byte>();
                 }
                 
                 var userData = await _authTokenProvider.GetAuthToken();
@@ -68,7 +85,7 @@ public class RoomKeyService : IRoomKeyService
                 var privateKey = Convert.FromBase64String(privateKeyData);
 
                 roomKey = await _cryptoService.DecryptRoomKey(roomKeyEncryptedData.Data, privateKey);
-                await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomVersion.Data}", Convert.ToBase64String(roomKey));
+                await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{roomKeyVersion}", Convert.ToBase64String(roomKey));
             }
             else
             {
@@ -153,6 +170,8 @@ public class RoomKeyService : IRoomKeyService
         var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
         var nextVersion = roomVersion.Data + 1;
         
+        await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{nextVersion}", Convert.ToBase64String(roomKey));
+        
         var publicKeys = new List<RoomKeyDataDto>();
         
         foreach (var user in userKeys)
@@ -173,6 +192,20 @@ public class RoomKeyService : IRoomKeyService
         }
         
         await _keyApiService.SaveNewKeys(roomPublicId, publicKeys);
+    }
+
+    public async Task SyncAndRotateKey(Guid roomPublicId)
+    {
+        var roomData = await _roomApiService.GetRoom(roomPublicId);
+        
+        var currentMemberIds = roomData.Data.ChatRoomKeyBlobDtos
+            .Select(x => x.UserPublicId)
+            .Distinct()
+            .ToList();
+        
+        var keysData = await _keyApiService.GetPublicIdentities(currentMemberIds);
+        
+        await RotateRoomKey(roomPublicId, keysData.Data);
     }
 
     public async Task ShareKeyDataWithUser(Guid roomPublicId, long version, IEnumerable<UserKeyDataDto> userKeys)

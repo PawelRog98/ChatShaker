@@ -14,6 +14,7 @@ public class CreateChatRoomHandlerTests
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<IChatRoomMembershipRepository> _mockChatRoomMembershipRepository;
+    private readonly Mock<IUserPublicKeyRepository> _mockUserPublicKeyRepository;
     private readonly CreateChatRoomCommandHandler _handler;
 
     public CreateChatRoomHandlerTests()
@@ -23,12 +24,14 @@ public class CreateChatRoomHandlerTests
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockUserRepository = new Mock<IUserRepository>();
         _mockChatRoomMembershipRepository = new Mock<IChatRoomMembershipRepository>();
+        _mockUserPublicKeyRepository = new Mock<IUserPublicKeyRepository>();
         _handler = new CreateChatRoomCommandHandler(
             _mockRoomRepository.Object,
             _mockUnitOfWork.Object,
             _mockKeyBlobRepository.Object,
             _mockUserRepository.Object,
-            _mockChatRoomMembershipRepository.Object);
+            _mockChatRoomMembershipRepository.Object,
+            _mockUserPublicKeyRepository.Object);
     }
 
 
@@ -110,6 +113,14 @@ public class CreateChatRoomHandlerTests
                 hostData,
                 secondUserData
             });
+
+        _mockUserPublicKeyRepository
+            .Setup(r => r.GetUserIdentitiesByUserId(hostData.Id, cancellationToken))
+            .ReturnsAsync(new List<UserPublicKey> { new UserPublicKey { DeviceId = "device1" } });
+
+        _mockUserPublicKeyRepository
+            .Setup(r => r.GetUserIdentitiesByUserId(secondUserData.Id, cancellationToken))
+            .ReturnsAsync(new List<UserPublicKey> { new UserPublicKey { DeviceId = "device2" } });
 
         _mockRoomRepository
             .Setup(r => r.Add(It.IsAny<ChatRoom>(), cancellationToken))

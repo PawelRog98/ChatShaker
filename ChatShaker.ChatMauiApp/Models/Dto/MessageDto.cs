@@ -13,6 +13,7 @@ public class MessageDto : BindableBase
     public string SenderName { get; set; }
     public DateTime SentAtUtc {get; set;}
     public string Nonce { get; set; }
+    public long KeyVersion { get; set; }
     public Guid ClientMessageId { get; set; }
     public MessageTypeEnum MessageType { get; set; }
 

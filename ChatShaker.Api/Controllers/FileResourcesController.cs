@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChatShaker.Api.Helpers;
 using ChatShaker.Application.Files.Commands;
 using ChatShaker.Application.Files.Queries;
@@ -24,10 +25,15 @@ public class FileResourcesController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Upload([FromForm] UploadedFileDto fileData, CancellationToken cancellationToken)
     {
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.Forbidden("User not found");
+
         if(fileData.File == null ||  fileData.File.Length == 0)
-            return BadRequest("File is empty");
+            return ApiResponse.BadRequest("File is empty");
         
-        var result = await _mediator.Send(new UploadFileCommand(fileData), cancellationToken);
+        var result = await _mediator.Send(new UploadFileCommand(fileData, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result, "Image saved");
     }
@@ -37,7 +43,12 @@ public class FileResourcesController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Download(Guid publicId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new DownloadFileQuery(publicId), cancellationToken);
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        
+        if(string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.Forbidden("User not found");
+
+        var result = await _mediator.Send(new DownloadFileQuery(publicId, long.Parse(userId)), cancellationToken);
 
         if (result == null)
             return ApiResponse.NotFound();

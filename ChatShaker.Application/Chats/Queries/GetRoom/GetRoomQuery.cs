@@ -32,18 +32,18 @@ public class GetRoomQueryHandler : IRequestHandler<GetRoomQuery, RoomDto>
     
     public async Task<RoomDto> Handle(GetRoomQuery request, CancellationToken cancellationToken)
     {
-        var version = await _chatRoomRepository.GetNewestRoomVersion(request.RoomPublicId, cancellationToken);
-        
-        if(version == null)
-            throw new BadRequestException("Room not found");
-
-        var isParticipant = await _keyBlobRepository.GetInfoIsUserHasActiveKey(request.UserId, version, cancellationToken);
-        
-        if (!isParticipant)
-            throw new BadAuthenticationException("User is not a participant");
-
         var room = await _chatRoomRepository.GetByPublicId(request.RoomPublicId, cancellationToken);
         
+        if(room == null)
+            throw new BadRequestException("Room not found");
+
+        var newestVersion = await _chatRoomRepository.GetNewestRoomVersion(request.RoomPublicId, cancellationToken);
+
+        var isParticipant = await _keyBlobRepository.GetInfoIsUserHasActiveKey(room.Id, request.UserId, newestVersion, cancellationToken);
+        
+        if (!isParticipant)
+            throw new ForbiddenException("User is not a participant");
+
         var roomDto = _mapper.Map<RoomDto>(room);
         return roomDto;
     }

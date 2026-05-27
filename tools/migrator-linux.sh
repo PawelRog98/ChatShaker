@@ -1,7 +1,7 @@
 #!/bin/bash
 
 migratorLoc="/home/parroter/Repos/ChatShaker/ChatShaker.Migrator"
-dbconn="Server=127.0.0.1,1433;Database=ChatShakerTest;User Id=sa;Password=Password-1;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+dbconn="Server=127.0.0.1,1433;Database=ChatShaker;User Id=sa;Password=Password-1;TrustServerCertificate=True;MultipleActiveResultSets=true;"
 
 clear
 

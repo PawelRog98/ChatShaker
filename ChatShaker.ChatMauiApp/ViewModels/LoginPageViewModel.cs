@@ -88,7 +88,23 @@ namespace ChatShaker.ChatMauiApp.ViewModels
                 
                 if (result.Success)
                 {
-                    await _cryptoService.SaveIdentityKey(result.Data.UserId);
+                    var clearOtherDevices = false;
+                    var userIdentities = await _userApiService.GetParticipants(new List<Guid> { Guid.Parse(result.Data.UserId) });
+                    
+                    if (userIdentities.Success && userIdentities.Data.Any())
+                    {
+                        var hasLocalKey = await SecureStorage.GetAsync("identity_private_key_" + result.Data.UserId) != null;
+                        if (!hasLocalKey)
+                        {
+                            clearOtherDevices = await Application.Current.MainPage.DisplayAlert(
+                                "New Device Detected", 
+                                "You have other registered devices. Do you want to clear them and make this your only active device? (Recommended if you reset your device)", 
+                                "Clear Others", 
+                                "Keep All");
+                        }
+                    }
+
+                    await _cryptoService.SaveIdentityKey(result.Data.UserId, clearOtherDevices);
                     var navResult = await _navigationService.NavigateAsync("/MainView");
                     if (!navResult.Success)
                     {

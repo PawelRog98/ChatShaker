@@ -153,10 +153,19 @@ public class CryptoService : ICryptoService
         return Task.FromResult(roomKey);
     }
 
-    public async Task SaveIdentityKey(string userId)
+    public async Task SaveIdentityKey(string userId, bool clearOtherDevices = false)
     {
+        var deviceId = Preferences.Default.Get("UniqueDeviceId", string.Empty);
+        if (string.IsNullOrEmpty(deviceId))
+        {
+            deviceId = Guid.NewGuid().ToString();
+            Preferences.Default.Set("UniqueDeviceId", deviceId);
+        }
+
+        var fullDeviceId = $"{DeviceInfo.Current.Model}_{deviceId}";
+
         var existingKey = await SecureStorage.GetAsync(PrivateIdentityKeyKey + userId);
-        if (existingKey != null)
+        if (existingKey != null && !clearOtherDevices)
             return;
 
         var generator = new X25519KeyPairGenerator();
@@ -171,7 +180,8 @@ public class CryptoService : ICryptoService
         
         var newUserKeyData = new UserKeyDataDto{
             PublicKey = Convert.ToBase64String(publicKey),
-            DeviceId = $"{DeviceInfo.Current.VersionString}@{DeviceInfo.Current.Model}"
+            DeviceId = fullDeviceId,
+            ClearOtherDevices = clearOtherDevices
         };
         await _keyApiService.UploadIdentity(newUserKeyData);
     }

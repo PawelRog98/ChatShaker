@@ -69,7 +69,12 @@ public class ChatRoomController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetInfoIfInitialized(Guid publicId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CheckIfRoomIsInitializedQuery(publicId), cancellationToken);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+
+        var result = await _mediator.Send(new CheckIfRoomIsInitializedQuery(publicId, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result);
     }
@@ -95,7 +100,12 @@ public class ChatRoomController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetKeyVersion(Guid publicId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetNewestRoomVersionQuery(publicId), cancellationToken);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return ApiResponse.BadRequest("User not found");
+
+        var result = await _mediator.Send(new GetNewestRoomVersionQuery(publicId, long.Parse(userId)), cancellationToken);
         
         return ApiResponse.Ok(result);
     }

@@ -64,12 +64,16 @@ public class ChatListViewModel : BindableBase, IRegionAware
     
             foreach (var room in rooms)
             {
-                if (room.Type == MessageTypeEnum.Text)
+                if (room.Type == MessageTypeEnum.Text && !string.IsNullOrWhiteSpace(room.LastMessagePreview))
                 {
                     var decryptedMessage = await _chatDataService.GetDecryptedMessage(room.RoomPublicId,
-                        room.LastMessagePreview, room.LastMessageNonce);
+                        room.LastMessagePreview, room.LastMessageNonce, room.KeyVersion);
 
                     room.LastMessagePreview = decryptedMessage;
+                }
+                else if (string.IsNullOrWhiteSpace(room.LastMessagePreview))
+                {
+                    room.LastMessagePreview = "Empty chat";
                 }
                 else
                 {

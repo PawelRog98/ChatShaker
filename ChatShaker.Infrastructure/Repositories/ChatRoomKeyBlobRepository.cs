@@ -40,8 +40,8 @@ public class ChatRoomKeyBlobRepository : IChatRoomKeyBlobRepository
         await _context.AddRangeAsync(keysData, cancellationToken);
     }
     
-    public async Task<bool> GetInfoIsUserHasActiveKey(long userId, long newestKeyVersion, CancellationToken cancellationToken)
+    public async Task<bool> GetInfoIsUserHasActiveKey(long roomId, long userId, long newestKeyVersion, CancellationToken cancellationToken)
     {
-        return await _context.ChatRoomKeyBlobs.AnyAsync(x => x.UserId == userId && x.Version == newestKeyVersion, cancellationToken);
+        return await _context.ChatRoomKeyBlobs.AnyAsync(x => x.ChatRoomId == roomId && x.UserId == userId && x.Version == newestKeyVersion, cancellationToken);
     }
 }

@@ -16,6 +16,7 @@ public class AddMemberHandlerTests
     private readonly Mock<IChatRoomRepository> _mockChatRoomRepository;
     private readonly Mock<IChatRoomKeyBlobRepository> _mockChatRoomKeyBlobRepository;
     private readonly Mock<IChatRoomMembershipRepository> _mockChatRoomMembershipRepository;
+    private readonly Mock<IUserPublicKeyRepository> _mockUserPublicKeyRepository;
     private readonly Mock<IChatNotifier> _mockChatNotifier;
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
 
@@ -27,6 +28,7 @@ public class AddMemberHandlerTests
         _mockChatRoomRepository = new Mock<IChatRoomRepository>();
         _mockChatRoomKeyBlobRepository = new Mock<IChatRoomKeyBlobRepository>();
         _mockChatRoomMembershipRepository = new Mock<IChatRoomMembershipRepository>();
+        _mockUserPublicKeyRepository = new Mock<IUserPublicKeyRepository>();
         _mockChatNotifier = new Mock<IChatNotifier>();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
 
@@ -35,6 +37,7 @@ public class AddMemberHandlerTests
             _mockChatRoomRepository.Object,
             _mockChatRoomKeyBlobRepository.Object,
             _mockChatRoomMembershipRepository.Object,
+            _mockUserPublicKeyRepository.Object,
             _mockChatNotifier.Object,
             _mockUnitOfWork.Object
         );
@@ -51,7 +54,8 @@ public class AddMemberHandlerTests
         {
             UserToAddPublicId = userToAddPublicId,
             RoomPublicId = roomPublicId,
-            EncryptedKey = Guid.NewGuid().ToString()
+            EncryptedKey = Guid.NewGuid().ToString(),
+            DeviceId = "Device1"
         };
 
         var userToAdd = new User
@@ -94,7 +98,8 @@ public class AddMemberHandlerTests
             PublicId = roomPublicId,
             HostId = host.Id,
             Name = "TestChatRoom",
-            CreatedAtUtc = DateTime.UtcNow.AddDays(-1)
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-1),
+            Type = "Group"
         };
         var cancellationToken = new CancellationToken();
 
@@ -104,6 +109,14 @@ public class AddMemberHandlerTests
             .Setup(r => r.GetByPublicId(roomPublicId, cancellationToken))
             .ReturnsAsync(room);
 
+        _mockChatRoomMembershipRepository
+            .Setup(r => r.Exists(room.Id, host.Id, cancellationToken))
+            .ReturnsAsync(true);
+
+        _mockChatRoomMembershipRepository
+            .Setup(r => r.Exists(room.Id, userToAdd.Id, cancellationToken))
+            .ReturnsAsync(false);
+
         _mockUserRepository
             .Setup(r => r.GetUserById(host.Id, cancellationToken))
             .ReturnsAsync(host);
@@ -111,6 +124,10 @@ public class AddMemberHandlerTests
         _mockUserRepository
             .Setup(r => r.GetUserByPublicId(userToAddPublicId, cancellationToken))
             .ReturnsAsync(userToAdd);
+
+        _mockUserPublicKeyRepository
+            .Setup(r => r.GetUserIdentitiesByUserId(userToAdd.Id, cancellationToken))
+            .ReturnsAsync(new List<UserPublicKey> { new UserPublicKey { DeviceId = "Device1" } });
 
         _mockChatRoomKeyBlobRepository
             .Setup(r => r.Add(It.IsAny<ChatRoomKeyBlob>(), cancellationToken))
@@ -162,7 +179,8 @@ public class AddMemberHandlerTests
         {
             UserToAddPublicId = userToAddPublicId,
             RoomPublicId = roomPublicId,
-            EncryptedKey = Guid.NewGuid().ToString()
+            EncryptedKey = Guid.NewGuid().ToString(),
+            DeviceId = "Device1"
         };
         var command = new AddMemberToRoomCommand(addMemberDto, 1);
         var cancellationToken = new CancellationToken();
@@ -191,7 +209,8 @@ public class AddMemberHandlerTests
         {
             UserToAddPublicId = userToAddPublicId,
             RoomPublicId = roomPublicId,
-            EncryptedKey = Guid.NewGuid().ToString()
+            EncryptedKey = Guid.NewGuid().ToString(),
+            DeviceId = "Device1"
         };
 
         var room = new ChatRoom
@@ -210,6 +229,10 @@ public class AddMemberHandlerTests
         _mockChatRoomRepository
             .Setup(r => r.GetByPublicId(roomPublicId, cancellationToken))
             .ReturnsAsync(room);
+
+        _mockChatRoomMembershipRepository
+            .Setup(r => r.Exists(room.Id, It.IsAny<long>(), cancellationToken))
+            .ReturnsAsync(true);
 
         _mockUserRepository
             .Setup(r=>r.GetUserById(1, cancellationToken))
@@ -238,7 +261,8 @@ public class AddMemberHandlerTests
         {
             UserToAddPublicId = userToAddPublicId,
             RoomPublicId = roomPublicId,
-            EncryptedKey = Guid.NewGuid().ToString()
+            EncryptedKey = Guid.NewGuid().ToString(),
+            DeviceId = "Device1"
         };
 
         var host = new User
@@ -274,6 +298,10 @@ public class AddMemberHandlerTests
         _mockChatRoomRepository
             .Setup(r => r.GetByPublicId(roomPublicId, cancellationToken))
             .ReturnsAsync(room);
+
+        _mockChatRoomMembershipRepository
+            .Setup(r => r.Exists(room.Id, It.IsAny<long>(), cancellationToken))
+            .ReturnsAsync(true);
 
         _mockUserRepository
             .Setup(r=>r.GetUserById(host.Id, cancellationToken))

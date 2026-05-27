@@ -42,4 +42,11 @@ public class ChatNotifier : IChatNotifier
             .UserAdded(userPublicId)
             .WaitAsync(cancellationToken);
     }
+
+    public async Task UserIdentityChanged(Guid userPublicId, CancellationToken cancellationToken)
+    {
+        await _hubContext.Clients.All
+            .UserIdentityChanged(userPublicId)
+            .WaitAsync(cancellationToken);
+    }
 }

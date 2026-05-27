@@ -10,20 +10,20 @@ namespace ChatShaker.ChatMauiApp.Handlers
 {
     public class AuthHeaderHandler : DelegatingHandler
     {
-        private readonly IAuthTokenProvider _authTokenProvider;
+        private readonly IAuthService _authService;
 
-        public AuthHeaderHandler(IAuthTokenProvider authTokenProvider)
+        public AuthHeaderHandler(IAuthService authService)
         {
-            _authTokenProvider = authTokenProvider;
+            _authService = authService;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _authTokenProvider.GetAuthToken();
+            var token = await _authService.GetAccessToken();
 
             if (token != null)
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             return await base.SendAsync(request, cancellationToken);

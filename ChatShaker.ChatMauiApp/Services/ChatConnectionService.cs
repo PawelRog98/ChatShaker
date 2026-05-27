@@ -17,6 +17,7 @@ public class ChatConnectionService : IChatConnectionService
     public event Action<Guid>? OMessageDelivered;
     public event Action<Guid>? OnMessageRead;
     public event Action<Guid>? OnUserAdded;
+    public event Action<Guid>? OnUserIdentityChanged;
 
     private bool _eventsBound = false;
     public void BindEvents()
@@ -37,6 +38,9 @@ public class ChatConnectionService : IChatConnectionService
 
         connection.On<Guid>("UserAdded", id =>
             OnUserAdded?.Invoke(id));
+
+        connection.On<Guid>("UserIdentityChanged", id =>
+            OnUserIdentityChanged?.Invoke(id));
     }
 
     public async Task AddUser(Guid roomPublicId)

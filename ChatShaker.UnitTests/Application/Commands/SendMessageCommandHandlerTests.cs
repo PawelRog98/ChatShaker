@@ -12,6 +12,7 @@ public class SendMessageCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<IChatRoomRepository> _mockChatRoomRepository;
+    private readonly Mock<IChatRoomMembershipRepository> _mockChatRoomMembershipRepository;
     private readonly Mock<IMessageRepository> _mockMessageRepository;
     private readonly Mock<IChatNotifier> _mockChatNotifier;
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
@@ -21,6 +22,7 @@ public class SendMessageCommandHandlerTests
     {
         _mockUserRepository = new Mock<IUserRepository>();
         _mockChatRoomRepository = new Mock<IChatRoomRepository>();
+        _mockChatRoomMembershipRepository = new Mock<IChatRoomMembershipRepository>();
         _mockMessageRepository = new Mock<IMessageRepository>();
         _mockChatNotifier = new Mock<IChatNotifier>();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
@@ -28,6 +30,7 @@ public class SendMessageCommandHandlerTests
         _handler = new SendMessageCommandHandler(
             _mockUserRepository.Object,
             _mockChatRoomRepository.Object,
+            _mockChatRoomMembershipRepository.Object,
             _mockMessageRepository.Object,
             _mockChatNotifier.Object,
             _mockUnitOfWork.Object
@@ -83,6 +86,10 @@ public class SendMessageCommandHandlerTests
         _mockChatRoomRepository
             .Setup(r => r.GetByPublicId(roomPublicId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatRoom);
+
+        _mockChatRoomMembershipRepository
+            .Setup(r => r.Exists(chatRoom.Id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _mockMessageRepository
             .Setup(r => r.Add(message, It.IsAny<CancellationToken>()))

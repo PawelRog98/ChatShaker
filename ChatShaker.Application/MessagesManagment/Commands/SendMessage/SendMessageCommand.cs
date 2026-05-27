@@ -22,17 +22,20 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
 {
     private readonly IUserRepository _userRepository;
     private readonly IChatRoomRepository _chatRoomRepository;
+    private readonly IChatRoomMembershipRepository _chatRoomMembershipRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly IChatNotifier _chatNotifier;
     private readonly IUnitOfWork _unitOfWork;
     public SendMessageCommandHandler(IUserRepository userRepository,
         IChatRoomRepository chatRoomRepository,
+        IChatRoomMembershipRepository chatRoomMembershipRepository,
         IMessageRepository messageRepository,
         IChatNotifier chatNotifier,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _chatRoomRepository = chatRoomRepository;
+        _chatRoomMembershipRepository = chatRoomMembershipRepository;
         _messageRepository = messageRepository;
         _chatNotifier = chatNotifier;
         _unitOfWork = unitOfWork;
@@ -46,6 +49,10 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
         if (room == null)
             throw new BadRequestException("Room not found");
 
+        var isMember = await _chatRoomMembershipRepository.Exists(room.Id, request.UserId, cancellationToken);
+        if (!isMember)
+            throw new ForbiddenException("You are not a member of this room");
+
         var message = new Message
         {
             ChatRoomId = room.Id,
@@ -54,7 +61,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
             Nonce = request.SendMessageDto.Nonce,
             SentAtUtc = DateTime.UtcNow,
             ClientMessageId = request.SendMessageDto.ClientMessageId,
-            MessageType = request.SendMessageDto.MessageType
+            MessageType = request.SendMessageDto.MessageType,
+            KeyVersion = request.SendMessageDto.KeyVersion
         };
 
         await _messageRepository.Add(message, cancellationToken);
@@ -84,7 +92,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Uni
             SentAtUtc = message.SentAtUtc,
             ClientMessageId = message.ClientMessageId,
             Status = Domain.Enums.MessageStatusEnum.Sent,
-            MessageType = message.MessageType
+            MessageType = message.MessageType,
+            KeyVersion = message.KeyVersion
         };
 
         await _chatNotifier.MessageSent(room.PublicId, messageDto, cancellationToken);
