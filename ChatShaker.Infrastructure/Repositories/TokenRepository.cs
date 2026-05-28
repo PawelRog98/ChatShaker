@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChatShaker.Domain.Enums;
 
 namespace ChatShaker.Infrastructure.Repositories
 {
@@ -19,10 +20,9 @@ namespace ChatShaker.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task CreateToken(Token token, CancellationToken cancellationToken)
+        public async Task Add(Token token, CancellationToken cancellationToken)
         {
             await _context.AddAsync(token, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<Token?> GetTokenDataWithUser(string token, CancellationToken cancellationToken)
@@ -36,7 +36,23 @@ namespace ChatShaker.Infrastructure.Repositories
         public async Task DeleteToken(Token token, CancellationToken cancellationToken)
         {
             _context.Remove(token);
-            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<Token?> GetActualActivationTokenForUser(string token, string email, CancellationToken cancellationToken)
+        {
+            return await  _context.Tokens
+                .Where(x => x.TokenData == token && 
+                            x.User.Email == email && 
+                            x.ExpireDateTime > DateTime.UtcNow && 
+                            x.TokenTypeValue == TokenType.ActivationToken.ToString())
+                .OrderByDescending(x=>x.CreatedDateUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task DeleteExpiredTokens(CancellationToken cancellationToken)
+        {
+            await  _context.Tokens.Where(x=>x.ExpireDateTime < DateTime.UtcNow)
+                .ExecuteDeleteAsync(cancellationToken);
         }
     }
 }

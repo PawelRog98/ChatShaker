@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             x:DataType="viewModels:SplashPageViewModel"
              x:Class="ChatShaker.ChatMauiApp.Views.SplashPage"
-             Title="SplashPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Splash"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             BackgroundColor="{StaticResource Primary}">
+    
+    <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="20">
+        <ActivityIndicator IsRunning="True" 
+                           Color="White" 
+                           HeightRequest="60" 
+                           WidthRequest="60" />
+        
+        <Label Text="Loading session..."
+               FontSize="16"
+               TextColor="White"
+               FontAttributes="Italic"
+               HorizontalOptions="Center" />
+    </StackLayout>
 </ContentPage>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="http://prismlibrary.com"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             xmlns:dto="clr-namespace:ChatShaker.ChatMauiApp.Models.Dto"
+             x:DataType="viewModels:SendInvitationViewModel"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
+             x:Class="ChatShaker.ChatMauiApp.Views.SendInvitationPage">
+    <ContentView.Content>
+    <Grid RowDefinitions="Auto, Auto, *" Padding="16" RowSpacing="20">
+        <Label Grid.Row="0"
+               Text="Send Invitation" 
+               FontSize="24"
+               FontAttributes="Bold"
+               TextColor="{StaticResource Primary}"/>
+
+        <StackLayout Grid.Row="1" Spacing="12">
+            <Border StrokeThickness="1" 
+                    Stroke="{StaticResource Gray300}" 
+                    Padding="16,0" 
+                    StrokeShape="RoundRectangle 12"
+                    BackgroundColor="White">
+                <Entry Placeholder="Enter invitation code"
+                       Text="{Binding OngoingText}"
+                       BackgroundColor="Transparent"
+                       HeightRequest="50"/>
+            </Border>
+            <Button Text="Send invitation"
+                    CornerRadius="12"
+                    HeightRequest="50"
+                    FontAttributes="Bold"
+                    Command="{Binding SendInvitationCommand}"/>
+        </StackLayout>
+        
+        <CollectionView Grid.Row="2" 
+                        ItemsSource="{Binding SentInvitations}">
+            <CollectionView.Header>
+                <Label Text="Sent Invitations History" 
+                       FontSize="16" 
+                       FontAttributes="Bold" 
+                       Margin="0,0,0,8"
+                       TextColor="{StaticResource Gray600}"/>
+            </CollectionView.Header>
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:InvitationDto">
+                    <Border StrokeThickness="0" 
+                            BackgroundColor="White" 
+                            Padding="16"
+                            StrokeShape="RoundRectangle 12">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.05" />
+                        </Border.Shadow>
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding RecipientUsername}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   Grid.Column="0"
+                                   Grid.Row="0"/>
+                            
+                            <Border Grid.Column="1" Grid.Row="0"
+                                    Padding="8,4"
+                                    BackgroundColor="{StaticResource Secondary}"
+                                    StrokeShape="RoundRectangle 8">
+                                <Label Text="{Binding Status}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Primary}"
+                                       FontAttributes="Bold"/>
+                            </Border>
+                            
+                            <Label Text="{Binding SentAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" 
+                                   Grid.Row="1"
+                                   Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray500}"
+                                   Margin="0,4,0,0"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+    </ContentView.Content>
+</ContentView>

@@ -12,10 +12,15 @@ namespace ChatShaker.Api.Configuration
             { "JWTAuth:JwtKey", Environment.GetEnvironmentVariable("JWT_KEY") },
             { "JWTAuth:JwtIssuer", Environment.GetEnvironmentVariable("JWT_ISSUER") },
             { "JWTAuth:JwtExpireDays", Environment.GetEnvironmentVariable("JWT_EXPIRE_DAYS") },
-            { "EmailConfiguration:EmailSmtp", Environment.GetEnvironmentVariable("EMAIL_SMTP") },
-            { "EmailConfiguration:Email", Environment.GetEnvironmentVariable("EMAIL") },
-            { "EmailConfiguration:EmailPassword", Environment.GetEnvironmentVariable("EMAIL_PASSWORD") },
-            { "EmailConfiguration:Port", Environment.GetEnvironmentVariable("EMAIL_PORT") }
+            { "FileStorage:RootPath", Environment.GetEnvironmentVariable("FILES_STORAGE") },
+            { "Hangfire:Dashboard:Username", Environment.GetEnvironmentVariable("HANGFIRE_USERNAME") },
+            { "Hangfire:Dashboard:Password", Environment.GetEnvironmentVariable("HANGFIRE_PASSWORD") },
+            { "EmailConfiguration:Host",  Environment.GetEnvironmentVariable("EMAIL_HOST") },
+            { "EmailConfiguration:Port",  Environment.GetEnvironmentVariable("EMAIL_PORT") },
+            { "EmailConfiguration:FromEmail",  Environment.GetEnvironmentVariable("EMAIL") },
+            { "EmailConfiguration:Username",  Environment.GetEnvironmentVariable("EMAIL_USERNAME") },
+            { "EmailConfiguration:Password",  Environment.GetEnvironmentVariable("EMAIL_PASSWORD") },
+            { "EmailConfiguration:FromName",  Environment.GetEnvironmentVariable("EMAIL_FROMNAME") },
         };
 
         public static IConfigurationBuilder AddMainConfiguration(this IConfigurationBuilder builder)

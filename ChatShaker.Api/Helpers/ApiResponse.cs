@@ -71,13 +71,7 @@ namespace ChatShaker.Api.Helpers
                 metaDataAction(metaData);
             }
 
-            var response = new Response<object>
-            {
-                Data = null,
-                Success = false,
-                Message = apiMessage,
-                MetaData = metaData
-            };
+            var response = new ErrorResponse(apiMessage, metaData);
 
             return new NotFoundObjectResult(response);
         }
@@ -90,14 +84,8 @@ namespace ChatShaker.Api.Helpers
                 metaData = new ExpandoObject();
                 metaDataAction(metaData);
             }
-
-            var response = new Response<object>
-            {
-                Data = null,
-                Success = false,
-                Message = apiMessage,
-                MetaData = metaData
-            };
+            
+            var response = new ErrorResponse(apiMessage, metaData);
 
             return new ObjectResult(response)
             {
@@ -113,15 +101,8 @@ namespace ChatShaker.Api.Helpers
                 metaData = new ExpandoObject();
                 metaDataAction(metaData);
             }
-
-            var response = new Response<object>
-            {
-                Data = null,
-                Success = false,
-                Message = apiMessage,
-                Errors = errors,
-                MetaData = metaData
-            };
+            
+            var response = new  ErrorResponse(apiMessage, errors, metaData);
 
             return new BadRequestObjectResult(response);
         }
@@ -134,14 +115,8 @@ namespace ChatShaker.Api.Helpers
                 metaData = new ExpandoObject();
                 metaDataAction(metaData);
             }
-
-            var response = new Response<object>
-            {
-                Data = null,
-                Success = false,
-                Message = apiMessage,
-                MetaData = metaData
-            };
+            
+            var response = new ErrorResponse(apiMessage, metaData);
 
             return new NotFoundObjectResult(response);
         }
@@ -154,15 +129,8 @@ namespace ChatShaker.Api.Helpers
                 metaData = new ExpandoObject();
                 metaDataAction(metaData);
             }
-
-            var response = new Response<object>
-            {
-                Data = null,
-                Success = false,
-                Message = apiMessage,
-                Errors = errors,
-                MetaData = metaData
-            };
+            
+            var response = new ErrorResponse(apiMessage, errors, metaData);
 
             return new ObjectResult(response)
             {

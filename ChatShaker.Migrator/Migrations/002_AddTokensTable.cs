@@ -16,13 +16,14 @@ namespace ChatShaker.Migrator.Migrations
             {
                 Create.Table("Tokens")
                     .WithColumn("Id").AsInt64().PrimaryKey().Identity()
-                    .WithColumn("PublicId").AsGuid().NotNullable().WithDefault(SystemMethods.NewGuid)
+                    .WithColumn("PublicId").AsGuid().WithDefault(SystemMethods.NewGuid).NotNullable()
                     .WithColumn("TokenData").AsString(512).NotNullable()
                     .WithColumn("ExpireDateTime").AsDateTime2().Nullable()
                     .WithColumn("TokenTypeValue").AsString(64).NotNullable()
                     .WithColumn("UserId").AsInt64();
 
-                Create.ForeignKey("FK_Tokens_UserId")
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Create.ForeignKey("FK_Tokens_UserId")
                     .FromTable("Tokens").ForeignColumn("UserId")
                     .ToTable("Users").PrimaryColumn("Id")
                     .OnDelete(System.Data.Rule.None);
@@ -33,7 +34,8 @@ namespace ChatShaker.Migrator.Migrations
         {
             if (Schema.Table("Tokens").Exists())
             {
-                Delete.ForeignKey("FK_Tokens_UserId").OnTable("Tokens");
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Delete.ForeignKey("FK_Tokens_UserId").OnTable("Tokens");
                 Delete.Table("Tokens");
             }
         }

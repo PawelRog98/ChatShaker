@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="http://prismlibrary.com"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             x:DataType="viewModels:MainPageViewModel"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
+             x:Class="ChatShaker.ChatMauiApp.Views.MainView">
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" 
+                BackgroundColor="White" 
+                StrokeThickness="0" 
+                Padding="8,4">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1" />
+            </Border.Shadow>
+            
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Padding="4" Spacing="8">
+                    <Border StrokeThickness="0" Padding="12,8" BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateRegionCommand}" CommandParameter="ChatListPage" />
+                        </Border.GestureRecognizers>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding CurrentView}" Value="ChatListPage">
+                                <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Label Text="My Chats" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                    </Border>
+
+                    <Border StrokeThickness="0" Padding="12,8" BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateRegionCommand}" CommandParameter="SendInvitationPage" />
+                        </Border.GestureRecognizers>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding CurrentView}" Value="SendInvitationPage">
+                                <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Label Text="Invite" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                    </Border>
+
+                    <Border StrokeThickness="0" Padding="12,8" BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateRegionCommand}" CommandParameter="RecievedInvitationPage" />
+                        </Border.GestureRecognizers>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding CurrentView}" Value="RecievedInvitationPage">
+                                <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Label Text="Invitations" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                    </Border>
+
+                    <BoxView WidthRequest="1" BackgroundColor="{StaticResource Gray200}" Margin="4,8" />
+
+                    <Border StrokeThickness="0" Padding="12,8" BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding LogoutCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="Logout" 
+                               FontAttributes="Bold"
+                               TextColor="#E74C3C"
+                               VerticalOptions="Center" />
+                    </Border>
+                </HorizontalStackLayout>
+            </ScrollView>
+        </Border>
+        
+        <ContentView Grid.Row="1"
+                     prism:RegionManager.RegionName="MainRegion"></ContentView>
+    </Grid>
+</ContentPage>

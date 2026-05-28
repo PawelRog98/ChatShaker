@@ -1,0 +1,10 @@
+namespace ChatShaker.Application.Chats.CreateChatRoom.Commands;
+
+public class UserEncryptionDto
+{
+    public Guid UserId { get; set; }
+    public string EncryptedUserKey { get; set; }
+    public bool IsHost { get; set; }
+    public string DeviceId { get; set; }
+    public long Version { get; set; }
+}

@@ -1,4 +1,6 @@
-﻿using ChatShaker.ChatMauiApp.Services;
+﻿using ChatShaker.ChatMauiApp.Handlers;
+using ChatShaker.ChatMauiApp.Services;
+using ChatShaker.ChatMauiApp.Services.Api;
 using ChatShaker.ChatMauiApp.Services.Interfaces;
 using ChatShaker.ChatMauiApp.ViewModels;
 using ChatShaker.ChatMauiApp.Views;
@@ -20,13 +22,35 @@ namespace ChatShaker.ChatMauiApp
                     prism.RegisterTypes(container =>
                     {
                         container.Register<IApiService, ApiService>();
+                        container.Register<IKeyApiService, KeyApiService>();
+                        container.Register<IMessagesApiService, MessagesApiService>();
+                        container.Register<IRoomApiService, RoomsApiService>();
+                        container.Register<IFriendshipApiService, FriendshipApiService>();
+                        container.Register<IUserApiService, UserApiService>();
+                        container.Register<IFileApiService, FileApiService>();
+                        container.Register<ITokenApiService, TokenApiService>();
+                        
                         container.Register<IAuthTokenProvider, AuthTokenProvider>();
                         container.Register<IAuthService, AuthService>();
+                        container.Register<ICryptoService, CryptoService>();
                         container.Register<IAppPopupService,  AppPopupService>();
+                        container.RegisterSingleton<ISignalRConnectionManager, SignalRConnectionManager>();
+                        container.RegisterSingleton<IChatConnectionService, ChatConnectionService>();
+                        container.Register<IGlobalConnectionService, GlobalConnectionService>();
+                        container.Register<IRoomKeyService, RoomKeyService>();
+                        container.Register<IChatDataService, ChatDataService>();
+                        container.Register<IImageService, ImageService>();
+                        container.Register<ChatHistoryViewModel>();
 
                         container.RegisterForNavigation<SplashPage, SplashPageViewModel>();
                         container.RegisterForNavigation<LoginPage, LoginPageViewModel>();
                         container.RegisterForNavigation<RegisterPage,  RegisterPageViewModel>();
+                        container.RegisterForNavigation<ConfirmationAccountPage, ActivationAccountViewModel>();
+                        container.RegisterForRegionNavigation<ChatViewPage, ChatViewModel>("ChatRoomPage");
+                        container.RegisterForRegionNavigation<ChatListPage, ChatListViewModel>();
+                        container.RegisterForNavigation<MainView, MainPageViewModel>();
+                        container.RegisterForRegionNavigation<SendInvitationPage, SendInvitationViewModel>();
+                        container.RegisterForRegionNavigation<RecievedInvitationPage, RecievedInvitationViewModel>();
                         container.RegisterForNavigation<MainPage>();
 
                     });
@@ -54,10 +78,16 @@ namespace ChatShaker.ChatMauiApp
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddTransient<AuthHeaderHandler>();
             builder.Services.AddHttpClient("ShakerApiClient", client =>
             {
-                //client.BaseAddress = new Uri("https://www.chat-shaker.io");
-                client.BaseAddress = new Uri("https://puny-crabs-begin.loca.lt");
+                client.BaseAddress = new Uri("http://10.0.2.2:8080");
+            })
+            .AddHttpMessageHandler<AuthHeaderHandler>();
+
+            builder.Services.AddHttpClient("AuthClient", client =>
+            {
+                client.BaseAddress = new Uri("http://10.0.2.2:8080");
             });
 
             return builder.Build();

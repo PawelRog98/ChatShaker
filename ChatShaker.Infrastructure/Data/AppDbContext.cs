@@ -17,6 +17,15 @@ namespace ChatShaker.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Token> Tokens { get; set; }
+        public DbSet<UserPublicKey> UserPublicKeys { get; set; }
+        public DbSet<ChatRoom> ChatRooms { get; set; }
+        public DbSet<ChatRoomMembership> ChatRoomMemberships { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<ChatRoomKeyBlob> ChatRoomKeyBlobs { get; set; }
+        public DbSet<MessageStatus> MessageStatuses { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<FileResource> FileResources { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

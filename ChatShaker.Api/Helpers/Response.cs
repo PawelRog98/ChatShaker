@@ -1,9 +1,13 @@
-﻿namespace ChatShaker.Api.Helpers
+﻿using System.ComponentModel;
+
+namespace ChatShaker.Api.Helpers
 {
     public class Response<T>
     {
         public T? Data { get; set; }
-        public bool Success { get; set; } = true;
+        
+        [DefaultValue(true)]
+        public bool Success { get; set; }
         public string[] Errors { get; set; } = null;
         public dynamic? MetaData { get; set; } = null;
         public string Message { get; set; } = string.Empty;
@@ -22,6 +26,12 @@
             Errors = errors;
             MetaData = metaData;
             Message = message;
+        }
+
+        public Response(string message, string[] errors)
+        {
+            Message = message;
+            Errors = errors;
         }
     }
 }

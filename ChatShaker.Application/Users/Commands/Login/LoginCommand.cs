@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using ChatShaker.Application.Users.Commands.Shared;
-using ChatShaker.Core.Interfaces.Authentication;
-using ChatShaker.Core.Models.Authentication;
-using ChatShaker.Core.Models.Authorization;
 using ChatShaker.Domain.Entities;
 using ChatShaker.Domain.Exceptions;
 using ChatShaker.Domain.Repositories;
+using ChatShaker.Domain.Serivces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using System;
@@ -31,41 +29,52 @@ namespace ChatShaker.Application.Users.Commands.Login
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public LoginCommandHandler(IAuthService authService, IMapper mapper, IUserRepository userRepository, IPasswordHasher<User> passwordHasher)
+        public LoginCommandHandler(IAuthService authService, IMapper mapper, IUserRepository userRepository, IPasswordHasher<User> passwordHasher, IUnitOfWork unitOfWork)
         {
             _authService = authService;
             _mapper = mapper;
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<AuthTokenDto> Handle(LoginCommand command, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByEmail(command.Login.Email, cancellationToken);
-
-            if (user == null)
+            try
             {
-                throw new BadAuthenticationException("Invalid user data.");
+                await _unitOfWork.BeginTransaction(cancellationToken);
+                var user = await _userRepository.GetUserByEmail(command.Login.Email, cancellationToken);
+
+                if (user == null)
+                {
+                    throw new BadAuthenticationException("Invalid user data.");
+                }
+
+                if (!user.IsEmailConfirmed)
+                {
+                    throw new BadAuthenticationException("Email is not confirmed.");
+                }
+
+                var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, command.Login.Password);
+                if (result == PasswordVerificationResult.Failed)
+                {
+                    throw new BadAuthenticationException("Invalid user data.");
+                }
+                var token = await _authService.GenerateJwtToken(user, cancellationToken);
+
+                await _unitOfWork.Commit(cancellationToken);
+
+                var resultToken = _mapper.Map<AuthTokenDto>(token);
+
+                return resultToken;
             }
-
-            var model = _mapper.Map<UserModel>(user);
-
-            if (user.IsEmailConfirmed == false)
+            catch (Exception)
             {
-                throw new NotActiveUserException();
+                await _unitOfWork.Rollback(cancellationToken);
+                throw;
             }
-
-            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, command.Login.Password);
-            if (result == PasswordVerificationResult.Failed)
-            {
-                throw new BadAuthenticationException("Invalid user data.");
-            }
-            var token = await _authService.GenerateJwtToken(model, cancellationToken);
-
-            var resultToken = _mapper.Map<AuthTokenDto>(token);
-
-            return resultToken;
         }
     }
 }

@@ -15,13 +15,6 @@ namespace ChatShaker.ChatMauiApp.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IAppPopupService _popupService;   
 
-        private bool _isBusy;
-        public bool IsBusy
-        {
-            get { return _isBusy; }
-            set { SetProperty(ref _isBusy, value); }
-        }
-
         #region View Poperties
         private string _email;
         public string Email

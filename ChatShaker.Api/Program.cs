@@ -1,11 +1,17 @@
 using ChatShaker.Api.Configuration;
+using ChatShaker.Api.Filters.Hangfire;
+using ChatShaker.Api.Hubs;
 using ChatShaker.Api.Middlewares;
+using ChatShaker.Api.SignalR;
 using ChatShaker.Application;
 using ChatShaker.Application.Common.Behaviors;
+using ChatShaker.Application.Interfaces;
 using ChatShaker.Application.Mapping;
 using ChatShaker.Infrastructure;
 using ChatShaker.Infrastructure.Data;
+using ChatShaker.Infrastructure.Jobs;
 using FluentValidation;
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore;
@@ -42,10 +48,24 @@ namespace ChatShaker.Api
 
             builder.Services.AddScoped<DataSeeder>();
 
+            if (!builder.Environment.IsEnvironment("IntegrationTests"))
+            {
+                builder.Services.AddSignalR()
+                    .AddStackExchangeRedis(builder.Configuration.GetConnectionString("RedisConnection"), options =>
+                    {
+                        options.Configuration.ChannelPrefix = "ChatShaker_App";
+                    });
+            }
+            else
+            {
+                builder.Services.AddSignalR();
+            }
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddScoped<RequestExceptionMiddleware>();
+            builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -66,18 +86,36 @@ namespace ChatShaker.Api
                 });
             }
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
-            using (var scope = app.Services.CreateScope())
+            if (!app.Environment.IsEnvironment("IntegrationTests"))
             {
+                using var scope = app.Services.CreateScope();
                 var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
                 await seeder.Seed();
+                
+                var registrar = scope.ServiceProvider.GetRequiredService<RecurringJobRegistrar>();
+                registrar.Register();
             }
-
+            
+            app.UseAuthentication();
             app.UseAuthorization();
+            
+            var hangfireCredentials =
+                builder.Configuration.GetSection("Hangfire:Dashboard").Get<HangfireDashboardSettings>();
+
+            if (hangfireCredentials is not null)
+            {
+                app.UseHangfireDashboard("/hangfire", new DashboardOptions
+                {
+                    Authorization = new[]
+                        { new HangfireAuthFilter(hangfireCredentials.Username, hangfireCredentials.Password) },
+                });
+            }
 
 
             app.MapControllers();
+            app.MapHub<ChatHub>("/chatHub");
 
             app.Run();
         }

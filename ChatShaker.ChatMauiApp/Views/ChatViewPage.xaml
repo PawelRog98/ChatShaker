@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatShaker.ChatMauiApp.Views.ChatViewPage"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             xmlns:dtos="clr-namespace:ChatShaker.ChatMauiApp.Models.Dto"
+             x:DataType="viewModels:ChatViewModel"
+             xmlns:prism="http://prismlibrary.com"
+             prism:ViewModelLocator.AutowireViewModel="Automatic">
+
+    <ContentView.Content>
+        <Grid RowDefinitions="*,Auto" Padding="12">
+
+            <CollectionView 
+                Grid.Row="0"
+                ItemsSource="{Binding Messages}"
+                VerticalOptions="Fill"
+                RemainingItemsThreshold="3"
+                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:MessageDto">
+                        <Grid Padding="10,2">
+                            <Border Padding="12,8"
+                                    StrokeThickness="0"
+                                    HorizontalOptions="Start"
+                                    BackgroundColor="{StaticResource Gray100}">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="15,15,15,2" />
+                                </Border.StrokeShape>
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsMine}" Value="True">
+                                        <Setter Property="HorizontalOptions" Value="End" />
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="StrokeShape">
+                                            <Setter.Value>
+                                                <RoundRectangle CornerRadius="15,15,2,15" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Border.Triggers>
+
+                                <StackLayout Spacing="2" MinimumWidthRequest="80">
+                                    <Label FontSize="11" 
+                                           TextColor="{StaticResource Gray600}"
+                                           Text="{Binding SenderName}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                    
+                                    <Border IsVisible="False" 
+                                            StrokeThickness="0"
+                                            Margin="0,0,0,4">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8" />
+                                        </Border.StrokeShape>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding MessageType}" Value="Image">
+                                                <Setter Property="IsVisible" Value="True" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        
+                                        <Image Source="{Binding ThumbnailLocalPath}"
+                                               Aspect="AspectFill"
+                                               HeightRequest="200"
+                                               WidthRequest="200">
+                                            <Image.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ChatViewModel}}, Path=OpenImageCommand}"
+                                                                      CommandParameter="{Binding .}" />
+                                            </Image.GestureRecognizers>
+                                        </Image>
+                                    </Border>
+
+                                    <Label FontSize="15" 
+                                           TextColor="Black"
+                                           Text="{Binding DisplayText}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                <Setter Property="TextColor" Value="White" />
+                                            </DataTrigger>
+                                            <MultiTrigger TargetType="Label">
+                                                <MultiTrigger.Conditions>
+                                                    <BindingCondition Binding="{Binding MessageType}" Value="Image" />
+                                                    <BindingCondition Binding="{Binding DisplayText}" Value="{x:Null}" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </MultiTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+
+                                    <StackLayout Orientation="Horizontal" HorizontalOptions="End" Spacing="4">
+                                        <Label Text="{Binding SentAtUtc, StringFormat='{0:HH:mm}'}"
+                                               FontSize="10" 
+                                               TextColor="{StaticResource Gray600}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource Gray200}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <Label Text="{Binding Status}" 
+                                               FontSize="10" 
+                                               TextColor="{StaticResource Gray600}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource Gray200}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </StackLayout>
+                                </StackLayout>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,8,0,0" VerticalOptions="End">
+                <Button Grid.Column="0"
+                        Text="📎"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        VerticalOptions="End"
+                        Margin="0,0,0,4"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"
+                        FontSize="24"
+                        Padding="0"
+                        Command="{Binding PickImageCommand}"/>
+                
+                <Border Grid.Column="1" 
+                        StrokeThickness="1" 
+                        Stroke="{StaticResource Gray300}" 
+                        Padding="12,2" 
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="White">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid HorizontalOptions="Start" Margin="0,8,0,4">
+                            <Grid.Triggers>
+                                <DataTrigger TargetType="Grid" Binding="{Binding SelectedImagePath}" Value="{x:Null}">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Grid" Binding="{Binding SelectedImagePath}" Value="">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Grid.Triggers>
+                            
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="100" HeightRequest="100">
+                                <Image Source="{Binding SelectedImagePath}" Aspect="AspectFill" />
+                            </Border>
+                            
+                            <Button Text="✕" 
+                                    Command="{Binding ClearImageCommand}"
+                                    HorizontalOptions="End" VerticalOptions="Start"
+                                    TranslationX="8" TranslationY="-8"
+                                    WidthRequest="22" HeightRequest="22" CornerRadius="11"
+                                    Padding="0" BackgroundColor="{StaticResource Gray500}" TextColor="White" FontSize="12" />
+                        </Grid>
+
+                        <Entry 
+                            Text="{Binding OngoingText}" 
+                            Placeholder="Write your message..."
+                            VerticalOptions="Center"
+                            HeightRequest="44" />
+                    </VerticalStackLayout>
+                </Border>
+                
+                <Button Grid.Column="2"
+                        Text="Send"
+                        CornerRadius="24"
+                        HeightRequest="48"
+                        VerticalOptions="End"
+                        Command="{Binding SendMessageCommand}" 
+                        Padding="20,0"/>
+            </Grid>
+        </Grid>
+    </ContentView.Content>
+</ContentView>

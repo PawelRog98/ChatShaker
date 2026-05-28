@@ -16,7 +16,7 @@ namespace ChatShaker.Migrator.Migrations
             {
                 Create.Table("Suspensions")
                     .WithColumn("Id").AsInt64().PrimaryKey().Identity()
-                    .WithColumn("PublicId").AsGuid().NotNullable().WithDefault(SystemMethods.NewGuid)
+                    .WithColumn("PublicId").AsGuid().WithDefault(SystemMethods.NewGuid).NotNullable()
                     .WithColumn("StartDate").AsDateTime2().NotNullable()
                     .WithColumn("EndDate").AsDateTime2().Nullable()
                     .WithColumn("Reason").AsString(512).NotNullable()
@@ -24,12 +24,14 @@ namespace ChatShaker.Migrator.Migrations
                     .WithColumn("UserId").AsInt64().NotNullable()
                     .WithColumn("SuspendedById").AsInt64().NotNullable();
 
-                Create.ForeignKey("FK_Suspensions_UserId")
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Create.ForeignKey("FK_Suspensions_UserId")
                     .FromTable("Suspensions").ForeignColumn("UserId")
                     .ToTable("Users").PrimaryColumn("Id")
                     .OnDelete(System.Data.Rule.None);
-
-                Create.ForeignKey("FK_Suspensions_SuspendedById")
+                
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Create.ForeignKey("FK_Suspensions_SuspendedById")
                     .FromTable("Suspensions").ForeignColumn("SuspendedById")
                     .ToTable("Users").PrimaryColumn("Id")
                     .OnDelete(System.Data.Rule.None);
@@ -40,8 +42,12 @@ namespace ChatShaker.Migrator.Migrations
         {
             if (Schema.Table("Suspensions").Exists())
             {
-                Delete.ForeignKey("FK_Suspensions_SuspendedById").OnTable("Suspensions");
-                Delete.ForeignKey("FK_Suspensions_UserId").OnTable("Suspensions");
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Delete.ForeignKey("FK_Suspensions_SuspendedById").OnTable("Suspensions");
+
+                IfDatabase("sqlserver", "postgresql", "mysql", "oracle")
+                    .Delete.ForeignKey("FK_Suspensions_UserId").OnTable("Suspensions");
+                    
                 Delete.Table("Suspensions");
             }
         }

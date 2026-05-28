@@ -36,47 +36,30 @@ namespace ChatShaker.Api.Middlewares
             switch(ex)
             {
                 case ValidationException validationException:
-                    resp = new Response<object>
-                    {
-                        Success = false,
-                        Errors = validationException.Errors
+                    
+                    var errors = validationException.Errors
                         .Select(e => $"{e.PropertyName}: {e.ErrorMessage}")
-                        .ToArray(),
-                        Message = validationException.Message
-                    };
+                        .ToArray();
+                    
+                    resp = new ErrorResponse(validationException.Message, errors);
 
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     break;
 
                 case MainHttpException mainHttpException:
-                    resp = new Response<object>
-                    {
-                        Success = false,
-                        Errors = [mainHttpException.Message],
-                        Message = "HttpError"
-                    };
+                    resp = new ErrorResponse("HttpError", [mainHttpException.Message]);
 
                     context.Response.StatusCode = mainHttpException.StatusCode;
                     break;
 
                 case UnauthorizedAccessException unauthorizedAccessException:
-                    resp = new Response<object>
-                    {
-                        Success = false,
-                        Errors = [unauthorizedAccessException.Message],
-                        Message = "Unauthorized"
-                    };
+                    resp = new ErrorResponse("Unauthorized", [unauthorizedAccessException.Message]);
 
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     break;
 
                 default:
-                    resp = new Response<object>
-                    {
-                        Success = false,
-                        Errors = [ex.Message],
-                        Message = "Internal Error"
-                    };
+                    resp = new ErrorResponse("Internal Error",  [ex.Message]);
 
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     break;

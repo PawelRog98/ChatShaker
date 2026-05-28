@@ -16,6 +16,7 @@ namespace ChatShaker.Domain.Entities
         public string TokenData { get; set; }
         public DateTime? ExpireDateTime { get; set; }
         public string TokenTypeValue { get; set; }
+        public DateTime CreatedDateUtc { get; set; }
         public long UserId { get; set; }
         public User User { get; set; }
 

@@ -1,0 +1,8 @@
+namespace ChatShaker.Domain.Enums;
+
+public enum FriendRequestStatus : byte
+{
+    Pending = 0,
+    Accepted = 1,
+    Declined = 2
+}

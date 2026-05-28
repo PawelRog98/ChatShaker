@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatShaker.ChatMauiApp.Views.UserPickerPage"
+             xmlns:viewModels="clr-namespace:ChatShaker.ChatMauiApp.ViewModels"
+             xmlns:models="clr-namespace:ChatShaker.ChatMauiApp.Models.Local"
+             x:DataType="viewModels:ChatCreateRoomViewModel"
+             xmlns:prism="http://prismlibrary.com"
+             prism:ViewModelLocator.AutowireViewModel="Automatic"
+             Title="UserPickerPage">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="12">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+            <Entry Text="{Binding Name}" Placeholder="Name..."/>
+            <Button Grid.Column="1" Text="Save" Command="{Binding ConfirmCommand}"></Button>
+        </Grid>
+        
+        <Entry Grid.Row="1" Text="{Binding SearchName}" Placeholder="Search..."></Entry>
+        
+        <CollectionView
+            Grid.Row="2"
+            ItemsSource="{Binding FilteredUsers}">
+            
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:SelectableUser">
+                    <Grid Padding="10" ColumnDefinitions="Auto,*">
+                        <CheckBox IsChecked="{Binding IsSelected}"/>
+                        <Label Grid.Column="1"
+                               Text="{Binding User.Name}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
