@@ -1,4 +1,11 @@
-namespace ChatShaker.Application.Chats.CreateChatRoom.Commands;
+namespace ChatShaker.ChatMauiApp.Models.Dto;
+
+public class CreateChatRoomDto
+{
+    public string Name { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public List<UserEncryptionDto> Keys { get; set; }
+}
 
 public class UserEncryptionDto
 {

@@ -29,6 +29,7 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
     private readonly IUserApiService _userApiService;
     private readonly IKeyApiService _keyApiService;
     private readonly INavigationService _navigationService;
+    private readonly IAuthTokenProvider _authTokenProvider;
 
     public ObservableCollection<SelectableUser> Users { get; } = new();
     public ObservableCollection<SelectableUser> FilteredUsers { get; } = new();
@@ -37,12 +38,13 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
     
     public bool IsLoading { get; private set; }
 
-    public ChatCreateRoomViewModel(IRoomKeyService roomKeyService,  IUserApiService userApiService, IKeyApiService keyApiService,  INavigationService navigationService)
+    public ChatCreateRoomViewModel(IRoomKeyService roomKeyService,  IUserApiService userApiService, IKeyApiService keyApiService,  INavigationService navigationService, IAuthTokenProvider authTokenProvider)
     {
         _roomKeyService = roomKeyService;
         _userApiService = userApiService;
         _keyApiService = keyApiService;
         _navigationService = navigationService;
+        _authTokenProvider = authTokenProvider;
 
         ConfirmCommand = new DelegateCommand(Confirm);
     }
@@ -67,11 +69,14 @@ public class ChatCreateRoomViewModel : BindableBase, IInitializeAsync
     private async void Confirm()
     {
         IsLoading = true;
-        var selectedUsers = Users.Where(x=>x.IsSelected)
-            .Select(x=>x.User)
+        var selectedUsersIds = Users.Where(x=>x.IsSelected)
+            .Select(x=>x.User.PublicId)
             .ToList();
+
+        var userData = await _authTokenProvider.GetAuthToken();
+        selectedUsersIds.Add(Guid.Parse(userData.UserId));
         
-        var usersData = await _keyApiService.GetPublicIdentities(selectedUsers.Select(x=>x.PublicId).ToList());
+        var usersData = await _keyApiService.GetPublicIdentities(selectedUsersIds);
         
         await _roomKeyService.GenerateAndSaveRoomKey(usersData.Data, _name);
         IsLoading = false;

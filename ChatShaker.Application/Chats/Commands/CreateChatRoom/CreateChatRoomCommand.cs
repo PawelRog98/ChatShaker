@@ -84,7 +84,8 @@ public class CreateChatRoomCommandHandler : IRequestHandler<CreateChatRoomComman
                     ChatRoomId = room.Id,
                     EncryptedRoomKey = userData.EncryptedUserKey,
                     CreatedAtUtc = DateTime.UtcNow,
-                    DeviceId = userData.DeviceId
+                    DeviceId = userData.DeviceId ?? "Default",
+                    Version = userData.Version == 0 ? 1 : userData.Version
                 };
 
                 var newMembership = new ChatRoomMembership

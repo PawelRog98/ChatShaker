@@ -2,6 +2,7 @@
 using ChatShaker.Application.Users.Commands.Login;
 using ChatShaker.Application.Users.Commands.Refresh;
 using ChatShaker.Application.Users.Commands.Register;
+using ChatShaker.Application.Users.Commands.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,8 @@ namespace ChatShaker.Api.Controllers
         }
 
         [HttpPost("login")]
+        [ProducesResponseType(typeof(Response<AuthTokenDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new LoginCommand(loginDto), cancellationToken);
@@ -27,6 +30,8 @@ namespace ChatShaker.Api.Controllers
         }
 
         [HttpPost("register")]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new RegisterCommand(registerDto), cancellationToken);
@@ -35,6 +40,8 @@ namespace ChatShaker.Api.Controllers
         }
 
         [HttpPost("refresh")]
+        [ProducesResponseType(typeof(Response<AuthTokenDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Refresh([FromBody] string refreshToken,  CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new RefreshCommand(refreshToken), cancellationToken);

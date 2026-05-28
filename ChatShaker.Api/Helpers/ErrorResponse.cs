@@ -1,7 +1,12 @@
+using System.ComponentModel;
+
 namespace ChatShaker.Api.Helpers;
 
 public class ErrorResponse : Response<object>
 {
+    [DefaultValue(false)]
+    public new bool Success { get; set; } = false;
+
     public ErrorResponse()
     {
         Success = false;

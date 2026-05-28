@@ -36,6 +36,16 @@ public class GetRoomKeyQueryHandler : IRequestHandler<GetRoomKeyQuery, string>
                 cancellationToken);
 
         if (key == null)
+        {
+            key = await _chatRoomKeyBlobRepository
+                .Get(request.RoomKeyRequest.PublicId,
+                    request.UserId,
+                    request.RoomKeyRequest.Version,
+                    "Default",
+                    cancellationToken);
+        }
+
+        if (key == null)
             throw new BadRequestException("Room key not found");
 
         return key.EncryptedRoomKey;

@@ -147,7 +147,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
                         CreatedAtUtc = DateTime.UtcNow,
                         EncryptedRoomKey = "Placeholder",
                         Version = 0,
-                        DeviceId = "placeholder"
+                        DeviceId = "Default"
                     },
                     new ChatRoomKeyBlob
                     {
@@ -156,7 +156,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
                         CreatedAtUtc = DateTime.UtcNow,
                         EncryptedRoomKey = "Placeholder",
                         Version = 0,
-                        DeviceId = "placeholder"
+                        DeviceId = "Default"
                     }
                 });
             }

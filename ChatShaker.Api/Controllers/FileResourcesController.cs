@@ -22,6 +22,7 @@ public class FileResourcesController : ControllerBase
 
     [HttpPost("upload")]
     [ProducesResponseType(typeof(Response<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Upload([FromForm] UploadedFileDto fileData, CancellationToken cancellationToken)
     {
@@ -40,6 +41,7 @@ public class FileResourcesController : ControllerBase
 
     [HttpGet("download/{publicId}")]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Download(Guid publicId, CancellationToken cancellationToken)
     {

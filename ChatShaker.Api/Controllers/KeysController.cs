@@ -26,6 +26,9 @@ public class KeysController :  ControllerBase
     }
 
     [HttpPost("save-identity")]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SaveIdentity([FromBody] UserKeyDataDto userKeyData)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,6 +42,9 @@ public class KeysController :  ControllerBase
     }
 
     [HttpDelete("remove-identity/{deviceId}")]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RemoveIdentity(string deviceId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

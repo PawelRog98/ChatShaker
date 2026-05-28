@@ -104,11 +104,12 @@ public class RoomKeyService : IRoomKeyService
     {
         var roomKey = GenerateRoomKey();
         
-        var publicKeys = new List<RoomKeyDataDto>();
-        var room = new RoomDto
+        var publicKeys = new List<UserEncryptionDto>();
+        var room = new CreateChatRoomDto
         {
             Name = name,
-            CreateDateUtc =  DateTime.UtcNow
+            CreatedAtUtc =  DateTime.UtcNow,
+            Keys = publicKeys
         };
 
         foreach(var user in userKeys)
@@ -116,10 +117,10 @@ public class RoomKeyService : IRoomKeyService
             var publicKeyBytes = Convert.FromBase64String(user.PublicKey);
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
 
-            var dataToSave = new RoomKeyDataDto
+            var dataToSave = new UserEncryptionDto
             {
-                UserPublicId =  user.PublicUserId.Value,
-                EncryptedRoomKey = encryptedKey,
+                UserId =  user.PublicUserId.Value,
+                EncryptedUserKey = encryptedKey,
                 Version = 1,
                 DeviceId = user.DeviceId
             };
@@ -127,7 +128,6 @@ public class RoomKeyService : IRoomKeyService
             publicKeys.Add(dataToSave);
         }
         
-        room.ChatRoomKeyBlobDtos = publicKeys;
         await _keyApiService.SaveRoomKey(room);
     }
 
@@ -135,8 +135,8 @@ public class RoomKeyService : IRoomKeyService
     {
         var roomKey = GenerateRoomKey();
         
-        var publicKeys = new List<RoomKeyDataDto>();
-        var room = new RoomDto
+        var publicKeys = new List<RoomKeyBlobDto>();
+        var room = new ChatRoomDto
         {
             ChatRoomPublicId = roomPublicId,
             ChatRoomKeyBlobDtos = publicKeys
@@ -148,17 +148,16 @@ public class RoomKeyService : IRoomKeyService
             
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
             
-            var dataToSave = new RoomKeyDataDto
+            var dataToSave = new RoomKeyBlobDto
             {
                 UserPublicId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
-                Version = 1,
-                DeviceId =  user.DeviceId
+                DeviceId =  user.DeviceId,
+                CreatedAtUtc = DateTime.UtcNow
             };
             
             publicKeys.Add(dataToSave);
         }
-        room.ChatRoomKeyBlobDtos = publicKeys;
         
         await _keyApiService.InitializeRoom(room);
     }
@@ -166,31 +165,31 @@ public class RoomKeyService : IRoomKeyService
     public async Task RotateRoomKey(Guid roomPublicId, IEnumerable<UserKeyDataDto> userKeys)
     {
         var roomKey = GenerateRoomKey();
-        
+
         var roomVersion = await _roomApiService.GetKeyVersion(roomPublicId);
         var nextVersion = roomVersion.Data + 1;
-        
+
         await SecureStorage.SetAsync($"{RoomKeyKey}_{roomPublicId}_{nextVersion}", Convert.ToBase64String(roomKey));
-        
-        var publicKeys = new List<RoomKeyDataDto>();
-        
+
+        var publicKeys = new List<RotationDto>();
+
         foreach (var user in userKeys)
         {
             var publicKeyBytes = Convert.FromBase64String(user.PublicKey);
-            
+
             var encryptedKey = await _cryptoService.EncryptRoomKey(roomKey, publicKeyBytes);
-            
-            var dataToSave = new RoomKeyDataDto
+
+            var dataToSave = new RotationDto
             {
-                UserPublicId =  user.PublicUserId.Value,
+                UserId =  user.PublicUserId.Value,
                 EncryptedRoomKey = encryptedKey,
                 Version = nextVersion,
-                DeviceId = user.DeviceId
+                DeviceId =  user.DeviceId
             };
-            
+
             publicKeys.Add(dataToSave);
         }
-        
+
         await _keyApiService.SaveNewKeys(roomPublicId, publicKeys);
     }
 
@@ -214,16 +213,16 @@ public class RoomKeyService : IRoomKeyService
         
         var roomKey = Convert.FromBase64String(roomKeyData);
         
-        var encryptedKeys =  new List<RoomKeyDataDto>();
+        var encryptedKeys =  new List<RotationDto>();
 
         foreach (var device in userKeys)
         {
             var newUserKey = Convert.FromBase64String(device.PublicKey);
             var encryptedRoomKey = await _cryptoService.EncryptRoomKey(roomKey, newUserKey);
             
-            encryptedKeys.Add(new RoomKeyDataDto
+            encryptedKeys.Add(new RotationDto
             {
-                UserPublicId =  device.PublicUserId.Value,
+                UserId =  device.PublicUserId.Value,
                 EncryptedRoomKey = encryptedRoomKey,
                 Version = version,
                 IsHost = false,

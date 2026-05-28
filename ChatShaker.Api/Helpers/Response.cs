@@ -1,8 +1,12 @@
-﻿namespace ChatShaker.Api.Helpers
+﻿using System.ComponentModel;
+
+namespace ChatShaker.Api.Helpers
 {
     public class Response<T>
     {
         public T? Data { get; set; }
+        
+        [DefaultValue(true)]
         public bool Success { get; set; }
         public string[] Errors { get; set; } = null;
         public dynamic? MetaData { get; set; } = null;

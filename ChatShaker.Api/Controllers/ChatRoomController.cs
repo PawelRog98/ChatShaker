@@ -6,6 +6,7 @@ using ChatShaker.Application.Chats.GetNewestRoomVersion;
 using ChatShaker.Application.Chats.Queries.CheckIfRoomIsInitialized;
 using ChatShaker.Application.Chats.Queries.GetRoom;
 using ChatShaker.Application.Chats.Queries.GetUserRooms;
+using ChatShaker.Application.MessagesManagment.Commands.SendMessage;
 using ChatShaker.Application.MessagesManagment.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -26,6 +27,8 @@ public class ChatRoomController : ControllerBase
     }
 
     [HttpPost("add-member")]
+    [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Addmember([FromBody] AddMemberToRoomDto addMemberToRoomDto, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,6 +42,8 @@ public class ChatRoomController : ControllerBase
     }
 
     [HttpGet("get-all")]
+    [ProducesResponseType(typeof(Response<List<ChatListItemDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRooms(CancellationToken  cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -52,19 +57,21 @@ public class ChatRoomController : ControllerBase
     }
 
     [HttpGet("{roomPublicId:guid}/messages")]
-    public async Task<IActionResult> GetHistoryMessages(Guid roomPublicId, [FromQuery] int pageIndex, [FromQuery] int pageSize)
+    [ProducesResponseType(typeof(Response<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetHistoryMessages(Guid roomPublicId, [FromQuery] int pageIndex, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrWhiteSpace(userId))
             return ApiResponse.BadRequest("User not found");
 
-        var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, long.Parse(userId), pageIndex, pageSize));
+        var result = await _mediator.Send(new GetMessagesHistoryQuery(roomPublicId, long.Parse(userId), pageIndex, pageSize), cancellationToken);
         
         return ApiResponse.Ok(result);
     }
 
-    [HttpGet("initialization-status/{publicId}")]
+    [HttpGet("initialization-status/{publicId:guid}")]
     [ProducesResponseType(typeof(Response<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetInfoIfInitialized(Guid publicId, CancellationToken cancellationToken)
@@ -79,7 +86,7 @@ public class ChatRoomController : ControllerBase
         return ApiResponse.Ok(result);
     }
 
-    [HttpGet("{publicId}")]
+    [HttpGet("{publicId:guid}")]
     [ProducesResponseType(typeof(Response<RoomDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
@@ -95,7 +102,7 @@ public class ChatRoomController : ControllerBase
         return ApiResponse.Ok(result);
     }
 
-    [HttpGet("key-version/{publicId}")]
+    [HttpGet("key-version/{publicId:guid}")]
     [ProducesResponseType(typeof(Response<long>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetKeyVersion(Guid publicId, CancellationToken cancellationToken)

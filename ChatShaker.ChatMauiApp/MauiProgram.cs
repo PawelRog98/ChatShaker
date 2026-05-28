@@ -85,10 +85,10 @@ namespace ChatShaker.ChatMauiApp
             })
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
-            /*builder.Services.AddHttpClient("AuthClient", client =>
+            builder.Services.AddHttpClient("AuthClient", client =>
             {
                 client.BaseAddress = new Uri("http://10.0.2.2:8080");
-            });*/
+            });
 
             return builder.Build();
         }

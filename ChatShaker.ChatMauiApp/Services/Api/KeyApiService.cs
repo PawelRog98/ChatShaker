@@ -49,7 +49,7 @@ public class KeyApiService : IKeyApiService
         return new Response<string> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
-    public async Task<Response<object>> SaveRoomKey(RoomDto roomKeys)
+    public async Task<Response<object>> SaveRoomKey(CreateChatRoomDto roomKeys)
     {
         var response = await _httpClient.PostAsJsonAsync("api/keys/create-room", roomKeys);
         if (response.IsSuccessStatusCode)
@@ -59,7 +59,7 @@ public class KeyApiService : IKeyApiService
         return new Response<object> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
 
-    public async Task<Response<object>> InitializeRoom(RoomDto room)
+    public async Task<Response<object>> InitializeRoom(ChatRoomDto room)
     {
         var response = await _httpClient.PutAsJsonAsync("api/keys/initialize-room-key", room);
         if (response.IsSuccessStatusCode)
@@ -69,7 +69,7 @@ public class KeyApiService : IKeyApiService
         return new Response<object> { Success = false, Message = $"Server returned {response.StatusCode}" };
     }
     
-    public async Task<Response<object>> SaveNewKeys(Guid publicId, IEnumerable<RoomKeyDataDto> keysData)
+    public async Task<Response<object>> SaveNewKeys(Guid publicId, IEnumerable<RotationDto> keysData)
     {
         var response = await _httpClient.PostAsJsonAsync($"api/keys/new-room-keys/{publicId}", keysData);
         return await response.Content.ReadFromJsonAsync<Response<object>>();

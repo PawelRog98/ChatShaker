@@ -11,4 +11,5 @@ public class ChatListItemDto
     public MessageTypeEnum Type { get; set; }
     public DateTime LastMessageDate { get; set; }
     public bool IsRead { get; set; }
+    public long KeyVersion { get; set; }
 }
